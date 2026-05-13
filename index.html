@@ -2054,16 +2054,13 @@ function renderFilteredKPI() {
         // Compute unique gen/failed using active filters
         var ugChMoMap2 = {};
         UNIQUE_GEN_CHANNEL_MONTH.forEach(function(u){ ugChMoMap2[u.ch+'|'+u.mo]=u; });
-        var moShortToFull2 = {"Nov'25":"Nov 2025","Dec'25":"Dec 2025","Jan'26":"Jan 2026","Feb'26":"Feb 2026","Mar'26":"Mar 2026"};
-        var allMonthsFull = ["Nov 2025","Dec 2025","Jan 2026","Feb 2026","Mar 2026"];
+        var allMonthsShort = ["Nov'25","Dec'25","Jan'26","Feb'26","Mar'26"];
         var allChannels2  = ["Meta","GDN","Organic"];
-        var activeMonthsFull = (monthFilter && monthFilter.length)
-          ? monthFilter.map(function(s){ return moShortToFull2[s]; }).filter(Boolean)
-          : allMonthsFull;
+        var activeMonthsShort = (monthFilter && monthFilter.length) ? monthFilter : allMonthsShort;
         var activeChannels2 = (channelFilter && channelFilter.length) ? channelFilter : allChannels2;
         var u_gen=0, u_fail=0;
         activeChannels2.forEach(function(ch){
-          activeMonthsFull.forEach(function(mo){
+          activeMonthsShort.forEach(function(mo){
             var ug = ugChMoMap2[ch+'|'+mo] || {};
             u_gen  += ug.total  || 0;
             u_fail += ug.failed || 0;
@@ -3173,7 +3170,7 @@ function initTab4() {
     var gTotRet = gTvsRet + gNmsRet;
     var gTotRev = gTotRet * 800;
     var gdnModelData = GDN_MODELS.find(function(x){return x.model===model;});
-    var gdnRoas = gdnModelData ? gdnModelData.tvs_roas : (gSpend>0 ? gTotRev/gSpend : null);
+    var gdnRoas = gdnModelData ? gdnModelData.roas : (gSpend>0 ? gTotRev/gSpend : null);
     var gdnCr   = gTrig>0  ? gTvsRet/gTrig*100 : 0;
 
     var metaRoas = m?m.roas:null;
