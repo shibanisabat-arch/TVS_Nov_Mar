@@ -680,7 +680,7 @@
   <div class="section">
     <div class="section-header">
       <span class="section-title">Top failure reasons</span>
-      <span class="section-hint">1,362,577 total failed · External 69.1% · Internal 30.9%</span>
+      <span class="section-hint">1,362,577 total failed · External 70.5% · Internal 27.3% · Unknown 2.2%</span>
     </div>
     <div class="fail-grid" id="fail-grid"></div>
   </div>
@@ -1011,7 +1011,7 @@
     <div class="kpi"><div class="kpi-label">Internal Failures</div><div class="kpi-value">30.9%<span style="font-size:13px;font-weight:400;display:block;color:var(--text-2)">4,21,057</span></div></div>
     <div class="kpi"><div class="kpi-label">External Failures</div><div class="kpi-value danger">69.1%<span style="font-size:13px;font-weight:400;display:block;color:var(--text-2)">9,41,520</span></div></div>
     <div class="kpi"><div class="kpi-label">OEM Dupe%</div><div class="kpi-value danger">40.5%<span style="font-size:13px;font-weight:400;display:block;color:var(--text-2)">8,96,599</span></div></div>
-    <div class="kpi"><div class="kpi-label">DNF%</div><div class="kpi-value danger">14.9%<span style="font-size:13px;font-weight:400;display:block;color:var(--text-2)">3,29,673<span style="font-size:11px;color:var(--text-3);display:block">Unique DNF: 1,16,977</span></span></div></div>
+    <div class="kpi"><div class="kpi-label">DNF%</div><div class="kpi-value danger">14.9%<span style="font-size:13px;font-weight:400;display:block;color:var(--text-2)">3,29,673<span style="font-size:11px;color:var(--text-3);display:block">Unique DNF: 1,08,616</span></span></div></div>
     <div class="kpi"><div class="kpi-label">City Mismatch%</div><div class="kpi-value">0.80%<span style="font-size:13px;font-weight:400;display:block;color:var(--text-2)">17,962</span></div></div>
     <div class="kpi"><div class="kpi-label">Pack Cap%</div><div class="kpi-value">0.66%<span style="font-size:13px;font-weight:400;display:block;color:var(--text-2)">14,897</span></div></div>
     <div class="kpi"><div class="kpi-label">Unique Generated</div><div class="kpi-value">10.7L<span style="font-size:13px;font-weight:400;display:block;color:var(--text-2)">10,73,315</span></div></div>
@@ -1119,270 +1119,108 @@
   </div>
 
 
+  
   <!-- ── DNF Analysis ─────────────────────────────── -->
   <div style="border-top:2px solid var(--border-md);margin:28px 0 20px;padding-top:20px;">
     <div style="font-size:16px;font-weight:500;color:var(--text);margin-bottom:4px;">DNF Analysis</div>
     <div style="font-size:12px;color:var(--text-3);margin-bottom:16px;">Dealer Not Found · Normal vs Unique · Relevant (in-scope) vs Irrelevant (out-of-scope)</div>
 
-    <!-- KPI row -->
-    <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));margin-bottom:16px;">
-      <div class="kpi"><div class="kpi-label">Total DNF</div><div class="kpi-value">358,256<span style="font-size:13px;font-weight:400;display:block;color:var(--text-2)">16.0% of Generated</span></div></div>
-      <div class="kpi"><div class="kpi-label">Relevant DNF</div><div class="kpi-value" style="color:var(--teal)">329,673<span style="font-size:13px;font-weight:400;display:block;color:var(--text-2)">92.0% of DNF</span></div></div>
-      <div class="kpi"><div class="kpi-label">Irrelevant DNF</div><div class="kpi-value" style="color:var(--amber)">28,583<span style="font-size:13px;font-weight:400;display:block;color:var(--text-2)">8.0% of DNF</span></div></div>
-      <div class="kpi"><div class="kpi-label">Unique DNF</div><div class="kpi-value">108,616<span style="font-size:13px;font-weight:400;display:block;color:var(--text-2)">10.1% of Uniq Gen</span></div></div>
-      <div class="kpi"><div class="kpi-label">Dedup Rate</div><div class="kpi-value">69.7%<span style="font-size:13px;font-weight:400;display:block;color:var(--text-2)">Repeat DNF removed</span></div></div>
-      <div class="kpi"><div class="kpi-label">Uniq Relevant</div><div class="kpi-value" style="color:var(--teal)">108,616<span style="font-size:13px;font-weight:400;display:block;color:var(--text-2)">67.1% deduped</span></div></div>
-    </div>
+    <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));margin-bottom:16px;"><div class="kpi"><div class="kpi-label">Total DNF</div><div class="kpi-value">358,256<span style="font-size:13px;font-weight:400;display:block;color:var(--text-2)">16.0% of Generated</span></div></div><div class="kpi"><div class="kpi-label">Relevant DNF</div><div class="kpi-value" style="color:var(--teal)">329,673<span style="font-size:13px;font-weight:400;display:block;color:var(--text-2)">92.0% of DNF</span></div></div><div class="kpi"><div class="kpi-label">Irrelevant DNF</div><div class="kpi-value" style="color:var(--amber)">28,583<span style="font-size:13px;font-weight:400;display:block;color:var(--text-2)">8.0% of DNF</span></div></div><div class="kpi"><div class="kpi-label">Unique DNF</div><div class="kpi-value">108,616<span style="font-size:13px;font-weight:400;display:block;color:var(--text-2)">10.1% of Uniq Gen</span></div></div><div class="kpi"><div class="kpi-label">Dedup Rate</div><div class="kpi-value">69.7%<span style="font-size:13px;font-weight:400;display:block;color:var(--text-2)">Repeat DNF removed</span></div></div><div class="kpi"><div class="kpi-label">Avg Frequency</div><div class="kpi-value">3.30x<span style="font-size:13px;font-weight:400;display:block;color:var(--text-2)">Same user hits DNF</span></div></div></div>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-      <!-- By Month -->
       <div class="section" style="margin-bottom:0">
-        <div class="section-header"><span class="section-title">DNF by month</span><span class="section-hint">Relevant = in-scope cities · Irrelevant = out-of-scope</span></div>
+        <div class="section-header"><span class="section-title">DNF by month</span><span class="section-hint">Frequency = avg times same user hits DNF</span></div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Month</th><th>Total</th><th style="color:var(--teal)">Relevant</th><th style="color:var(--amber)">Irrelevant</th><th>Rel%</th><th>Irrel%</th></tr></thead>
-            <tbody><tr>
-        <td style="font-weight:500">Nov'25</td>
-        <td>107,062</td>
-        <td style="color:var(--teal)">100,211</td>
-        <td style="color:var(--amber)">6,851</td>
-        <td>93.6%</td>
-        <td>6.4%</td>
-      </tr><tr>
-        <td style="font-weight:500">Dec'25</td>
-        <td>74,283</td>
-        <td style="color:var(--teal)">68,365</td>
-        <td style="color:var(--amber)">5,918</td>
-        <td>92.0%</td>
-        <td>8.0%</td>
-      </tr><tr>
-        <td style="font-weight:500">Jan'26</td>
-        <td>64,537</td>
-        <td style="color:var(--teal)">59,304</td>
-        <td style="color:var(--amber)">5,233</td>
-        <td>91.9%</td>
-        <td>8.1%</td>
-      </tr><tr>
-        <td style="font-weight:500">Feb'26</td>
-        <td>59,151</td>
-        <td style="color:var(--teal)">53,952</td>
-        <td style="color:var(--amber)">5,199</td>
-        <td>91.2%</td>
-        <td>8.8%</td>
-      </tr><tr>
-        <td style="font-weight:500">Mar'26</td>
-        <td>53,223</td>
-        <td style="color:var(--teal)">47,841</td>
-        <td style="color:var(--amber)">5,382</td>
-        <td>89.9%</td>
-        <td>10.1%</td>
-      </tr><tr class="total-row">
-        <td><strong>Total</strong></td>
-        <td>358,256</td>
-        <td style="color:var(--teal)">329,673</td>
-        <td style="color:var(--amber)">28,583</td>
-        <td>92.0%</td>
-        <td>8.0%</td>
-      </tr></tbody>
+            <thead><tr>
+              <th>Month</th><th>Total</th>
+              <th style="color:var(--teal)">Relevant</th>
+              <th style="color:var(--amber)">Irrelevant</th>
+              <th>Unique</th>
+              <th style="color:var(--teal)">Rel Unique</th>
+              <th>Dedup%</th>
+              <th>Frequency</th>
+            </tr></thead>
+            <tbody><tr><td style="font-weight:500">Nov'25</td><td>107,062</td><td style="color:var(--teal)">100,211</td><td style="color:var(--amber)">6,851</td><td>31,631</td><td style="color:var(--teal)">31,631</td><td>70.5%</td><td>3.38x</td></tr><tr><td style="font-weight:500">Dec'25</td><td>74,283</td><td style="color:var(--teal)">68,365</td><td style="color:var(--amber)">5,918</td><td>20,232</td><td style="color:var(--teal)">20,232</td><td>72.8%</td><td>3.67x</td></tr><tr><td style="font-weight:500">Jan'26</td><td>64,537</td><td style="color:var(--teal)">59,304</td><td style="color:var(--amber)">5,233</td><td>17,124</td><td style="color:var(--teal)">17,124</td><td>73.5%</td><td>3.77x</td></tr><tr><td style="font-weight:500">Feb'26</td><td>59,151</td><td style="color:var(--teal)">53,952</td><td style="color:var(--amber)">5,199</td><td>17,914</td><td style="color:var(--teal)">17,914</td><td>69.7%</td><td>3.30x</td></tr><tr><td style="font-weight:500">Mar'26</td><td>53,223</td><td style="color:var(--teal)">47,841</td><td style="color:var(--amber)">5,382</td><td>21,715</td><td style="color:var(--teal)">21,715</td><td>59.2%</td><td>2.45x</td></tr><tr class="total-row"><td><strong>Total</strong></td><td>358,256</td><td style="color:var(--teal)">329,673</td><td style="color:var(--amber)">28,583</td><td>108,616</td><td style="color:var(--teal)">108,616</td><td>69.7%</td><td>3.30x</td></tr></tbody>
           </table>
         </div>
       </div>
-      <!-- By Channel -->
       <div class="section" style="margin-bottom:0">
-        <div class="section-header"><span class="section-title">DNF by channel</span><span class="section-hint">Meta has highest irrelevant% — out-of-scope geo targeting</span></div>
+        <div class="section-header"><span class="section-title">DNF by channel</span><span class="section-hint">Frequency = avg times same user hits DNF</span></div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Channel</th><th>Total</th><th style="color:var(--teal)">Relevant</th><th style="color:var(--amber)">Irrelevant</th><th>Rel%</th><th>Irrel%</th></tr></thead>
-            <tbody><tr>
-        <td><span class="ch-dot" style="background:#378add"></span>Meta</td>
-        <td>33,984</td>
-        <td style="color:var(--teal)">28,831</td>
-        <td style="color:var(--amber)">5,153</td>
-        <td>84.8%</td>
-        <td>15.2%</td>
-      </tr><tr>
-        <td><span class="ch-dot" style="background:#d85a30"></span>GDN</td>
-        <td>78,311</td>
-        <td style="color:var(--teal)">70,578</td>
-        <td style="color:var(--amber)">7,733</td>
-        <td>90.1%</td>
-        <td>9.9%</td>
-      </tr><tr>
-        <td><span class="ch-dot" style="background:#1d9e75"></span>Organic</td>
-        <td>245,961</td>
-        <td style="color:var(--teal)">230,264</td>
-        <td style="color:var(--amber)">15,697</td>
-        <td>93.6%</td>
-        <td>6.4%</td>
-      </tr><tr class="total-row">
-        <td><strong>Total</strong></td>
-        <td>358,256</td>
-        <td style="color:var(--teal)">329,673</td>
-        <td style="color:var(--amber)">28,583</td>
-        <td>92.0%</td>
-        <td>8.0%</td>
-      </tr></tbody>
+            <thead><tr>
+              <th>Channel</th><th>Total</th>
+              <th style="color:var(--teal)">Relevant</th>
+              <th style="color:var(--amber)">Irrelevant</th>
+              <th>Unique</th>
+              <th style="color:var(--teal)">Rel Unique</th>
+              <th>Dedup%</th>
+              <th>Frequency</th>
+            </tr></thead>
+            <tbody><tr><td><span class="ch-dot" style="background:#378add"></span>Meta</td><td>33,984</td><td style="color:var(--teal)">28,831</td><td style="color:var(--amber)">5,153</td><td>14,069</td><td style="color:var(--teal)">14,069</td><td>58.6%</td><td>2.42x</td></tr><tr><td><span class="ch-dot" style="background:#d85a30"></span>GDN</td><td>78,311</td><td style="color:var(--teal)">70,578</td><td style="color:var(--amber)">7,733</td><td>23,835</td><td style="color:var(--teal)">23,835</td><td>69.6%</td><td>3.29x</td></tr><tr><td><span class="ch-dot" style="background:#1d9e75"></span>Organic</td><td>245,961</td><td style="color:var(--teal)">230,264</td><td style="color:var(--amber)">15,697</td><td>70,712</td><td style="color:var(--teal)">70,712</td><td>71.3%</td><td>3.48x</td></tr><tr class="total-row"><td><strong>Total</strong></td><td>358,256</td><td style="color:var(--teal)">329,673</td><td style="color:var(--amber)">28,583</td><td>108,616</td><td style="color:var(--teal)">108,616</td><td>69.7%</td><td>3.30x</td></tr></tbody>
           </table>
         </div>
       </div>
     </div>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
-      <!-- Top 20 cities -->
       <div class="section" style="margin-bottom:0">
-        <div class="section-header"><span class="section-title">Relevant DNF — top 20 cities</span><span class="section-hint">Normal · Unique · Dedup%</span></div>
-        <div class="table-wrap" style="max-height:300px;overflow-y:auto;">
+        <div class="section-header">
+          <span class="section-title">Relevant DNF — top 20 cities</span>
+          <span class="section-hint">Normal = all hits · Unique = distinct users · Meta/GDN = normal quantum (top 15 only)</span>
+        </div>
+        <div class="table-wrap" style="max-height:340px;overflow-y:auto;">
           <table>
-            <thead><tr><th>City</th><th>Normal</th><th>Norm%</th><th>Unique</th><th>Dedup%</th></tr></thead>
-            <tbody><tr>
-        <td>New Delhi</td>
-        <td>15,406</td>
-        <td>4.7%</td>
-        <td>6,394</td>
-        <td>58.5%</td>
-      </tr><tr>
-        <td>Bangalore</td>
-        <td>8,888</td>
-        <td>2.7%</td>
-        <td>2,959</td>
-        <td>66.7%</td>
-      </tr><tr>
-        <td>Mumbai</td>
-        <td>5,473</td>
-        <td>1.7%</td>
-        <td>2,136</td>
-        <td>61.0%</td>
-      </tr><tr>
-        <td>North 24 Parganas</td>
-        <td>3,665</td>
-        <td>1.1%</td>
-        <td>852</td>
-        <td>76.8%</td>
-      </tr><tr>
-        <td>Kolhapur</td>
-        <td>3,504</td>
-        <td>1.1%</td>
-        <td>1,028</td>
-        <td>70.7%</td>
-      </tr><tr>
-        <td>Pune</td>
-        <td>3,244</td>
-        <td>1.0%</td>
-        <td>1,489</td>
-        <td>54.1%</td>
-      </tr><tr>
-        <td>Hyderabad</td>
-        <td>2,997</td>
-        <td>0.9%</td>
-        <td>1,148</td>
-        <td>61.7%</td>
-      </tr><tr>
-        <td>Chennai</td>
-        <td>2,711</td>
-        <td>0.8%</td>
-        <td>855</td>
-        <td>68.5%</td>
-      </tr><tr>
-        <td>Kolkata</td>
-        <td>2,491</td>
-        <td>0.8%</td>
-        <td>625</td>
-        <td>74.9%</td>
-      </tr><tr>
-        <td>Nagpur</td>
-        <td>2,487</td>
-        <td>0.8%</td>
-        <td>823</td>
-        <td>66.9%</td>
-      </tr><tr>
-        <td>Chandigarh</td>
-        <td>2,120</td>
-        <td>0.6%</td>
-        <td>903</td>
-        <td>57.4%</td>
-      </tr><tr>
-        <td>Howrah</td>
-        <td>1,976</td>
-        <td>0.6%</td>
-        <td>477</td>
-        <td>75.9%</td>
-      </tr><tr>
-        <td>Solapur</td>
-        <td>1,967</td>
-        <td>0.6%</td>
-        <td>685</td>
-        <td>65.2%</td>
-      </tr><tr>
-        <td>Ranga reddy</td>
-        <td>1,965</td>
-        <td>0.6%</td>
-        <td>583</td>
-        <td>70.3%</td>
-      </tr><tr>
-        <td>Ahmedabad</td>
-        <td>1,620</td>
-        <td>0.5%</td>
-        <td>592</td>
-        <td>63.5%</td>
-      </tr><tr>
-        <td>Surat</td>
-        <td>1,530</td>
-        <td>0.5%</td>
-        <td>500</td>
-        <td>67.3%</td>
-      </tr><tr>
-        <td>Jaipur</td>
-        <td>1,453</td>
-        <td>0.4%</td>
-        <td>567</td>
-        <td>61.0%</td>
-      </tr><tr>
-        <td>Thane</td>
-        <td>1,330</td>
-        <td>0.4%</td>
-        <td>480</td>
-        <td>63.9%</td>
-      </tr><tr>
-        <td>Coimbatore</td>
-        <td>1,307</td>
-        <td>0.4%</td>
-        <td>441</td>
-        <td>66.3%</td>
-      </tr><tr>
-        <td>Patna</td>
-        <td>1,256</td>
-        <td>0.4%</td>
-        <td>361</td>
-        <td>71.3%</td>
-      </tr></tbody>
+            <thead><tr>
+              <th>City</th>
+              <th>Normal DNF</th>
+              <th>Unique DNF</th>
+              <th style="color:#378add">Meta</th>
+              <th style="color:#d85a30">GDN</th>
+            </tr></thead>
+            <tbody><tr><td>New Delhi</td><td>15,406</td><td>6,394</td><td style="color:#378add">577</td><td style="color:#d85a30">1,947</td></tr><tr><td>Bangalore</td><td>8,888</td><td>2,959</td><td style="color:#378add">448</td><td style="color:#d85a30">1,302</td></tr><tr><td>Mumbai</td><td>5,473</td><td>2,136</td><td style="color:#378add">289</td><td style="color:#d85a30">1,049</td></tr><tr><td>North 24 Parganas</td><td>3,665</td><td>852</td><td style="color:#378add">150</td><td style="color:#d85a30">594</td></tr><tr><td>Kolhapur</td><td>3,504</td><td>1,028</td><td style="color:#378add">226</td><td style="color:#d85a30">1,555</td></tr><tr><td>Pune</td><td>3,244</td><td>1,489</td><td style="color:#378add">188</td><td style="color:#d85a30">467</td></tr><tr><td>Hyderabad</td><td>2,997</td><td>1,148</td><td style="color:#378add">154</td><td style="color:#d85a30">440</td></tr><tr><td>Chennai</td><td>2,711</td><td>855</td><td style="color:#378add">150</td><td style="color:#d85a30">508</td></tr><tr><td>Kolkata</td><td>2,491</td><td>625</td><td style="color:#378add">70</td><td style="color:#d85a30">298</td></tr><tr><td>Nagpur</td><td>2,487</td><td>823</td><td style="color:#378add">134</td><td style="color:#d85a30">586</td></tr><tr><td>Chandigarh</td><td>2,120</td><td>903</td><td style="color:#378add">368</td><td style="color:#d85a30">451</td></tr><tr><td>Howrah</td><td>1,976</td><td>477</td><td style="color:#378add">138</td><td style="color:#d85a30">325</td></tr><tr><td>Solapur</td><td>1,967</td><td>685</td><td style="color:#378add">170</td><td style="color:#d85a30">675</td></tr><tr><td>Ranga reddy</td><td>1,965</td><td>583</td><td style="color:#378add">105</td><td style="color:#d85a30">408</td></tr><tr><td>Ahmedabad</td><td>1,620</td><td>592</td><td style="color:#378add">68</td><td style="color:#d85a30">256</td></tr><tr><td>Surat</td><td>1,530</td><td>500</td><td style="color:#378add">—</td><td style="color:#d85a30">—</td></tr><tr><td>Jaipur</td><td>1,453</td><td>567</td><td style="color:#378add">—</td><td style="color:#d85a30">—</td></tr><tr><td>Thane</td><td>1,330</td><td>480</td><td style="color:#378add">—</td><td style="color:#d85a30">—</td></tr><tr><td>Coimbatore</td><td>1,307</td><td>441</td><td style="color:#378add">—</td><td style="color:#d85a30">—</td></tr><tr><td>Patna</td><td>1,256</td><td>361</td><td style="color:#378add">—</td><td style="color:#d85a30">—</td></tr></tbody>
           </table>
         </div>
       </div>
-      <!-- Meta irrelevant cities -->
       <div class="section" style="margin-bottom:0">
-        <div class="section-header"><span class="section-title">Meta — top irrelevant DNF cities</span><span class="section-hint">Out-of-scope geo targeting · Total Meta irrelevant: 5,153</span></div>
-        <div class="table-wrap">
+        <div class="section-header">
+          <span class="section-title">Irrelevant DNF — top cities</span>
+          <span class="section-hint">Out-of-scope cities · sorted by Meta+GDN total · Meta irrel=5,153 · GDN irrel=7,733</span>
+        </div>
+        <div class="table-wrap" style="max-height:340px;overflow-y:auto;">
           <table>
-            <thead><tr><th>City</th><th>Count</th><th>% of Meta Irrel</th></tr></thead>
-            <tbody><tr><td>Mewat</td><td>314</td><td>6.1%</td></tr><tr><td>East Khasi Hills</td><td>266</td><td>5.2%</td></tr><tr><td>Kupwara</td><td>234</td><td>4.5%</td></tr><tr><td>Phalodi</td><td>199</td><td>3.9%</td></tr><tr><td>Samalkota</td><td>96</td><td>1.9%</td></tr><tr><td>Falna</td><td>90</td><td>1.7%</td></tr><tr><td>Bandipora</td><td>85</td><td>1.6%</td></tr><tr><td>Nathdwara</td><td>72</td><td>1.4%</td></tr><tr><td>Patancheru</td><td>66</td><td>1.3%</td></tr><tr><td>Bishnupur</td><td>66</td><td>1.3%</td></tr></tbody>
+            <thead><tr>
+              <th>City</th>
+              <th style="color:#378add">Meta</th>
+              <th style="color:#d85a30">GDN</th>
+              <th>Total</th>
+            </tr></thead>
+            <tbody><tr><td>Kupwara</td><td style="color:#378add">234</td><td style="color:#d85a30">476</td><td style="font-weight:500">710</td></tr><tr><td>East Khasi Hills</td><td style="color:#378add">266</td><td style="color:#d85a30">106</td><td style="font-weight:500">372</td></tr><tr><td>Mewat</td><td style="color:#378add">314</td><td style="color:#d85a30">8</td><td style="font-weight:500">322</td></tr><tr><td>Bandipora</td><td style="color:#378add">85</td><td style="color:#d85a30">165</td><td style="font-weight:500">250</td></tr><tr><td>Phalodi</td><td style="color:#378add">199</td><td style="color:#d85a30">45</td><td style="font-weight:500">244</td></tr><tr><td>Patancheru</td><td style="color:#378add">66</td><td style="color:#d85a30">154</td><td style="font-weight:500">220</td></tr><tr><td>Barauni</td><td style="color:#378add">31</td><td style="color:#d85a30">166</td><td style="font-weight:500">197</td></tr><tr><td>Hindaun</td><td style="color:#378add">50</td><td style="color:#d85a30">127</td><td style="font-weight:500">177</td></tr><tr><td>Sirmaur</td><td style="color:#378add">63</td><td style="color:#d85a30">112</td><td style="font-weight:500">175</td></tr><tr><td>Senapati</td><td style="color:#378add">35</td><td style="color:#d85a30">129</td><td style="font-weight:500">164</td></tr><tr><td>Nathdwara</td><td style="color:#378add">72</td><td style="color:#d85a30">76</td><td style="font-weight:500">148</td></tr><tr><td>Bangarapet</td><td style="color:#378add">61</td><td style="color:#d85a30">71</td><td style="font-weight:500">132</td></tr><tr><td>Suratgarh</td><td style="color:#378add">34</td><td style="color:#d85a30">94</td><td style="font-weight:500">128</td></tr><tr><td>Bishnupur</td><td style="color:#378add">66</td><td style="color:#d85a30">56</td><td style="font-weight:500">122</td></tr><tr><td>Samba</td><td style="color:#378add">39</td><td style="color:#d85a30">81</td><td style="font-weight:500">120</td></tr><tr><td>Alandi</td><td style="color:#378add">39</td><td style="color:#d85a30">76</td><td style="font-weight:500">115</td></tr><tr><td>Samalkota</td><td style="color:#378add">96</td><td style="color:#d85a30">13</td><td style="font-weight:500">109</td></tr><tr><td>Fatehgarh</td><td style="color:#378add">33</td><td style="color:#d85a30">74</td><td style="font-weight:500">107</td></tr><tr><td>Dindori</td><td style="color:#378add">28</td><td style="color:#d85a30">76</td><td style="font-weight:500">104</td></tr><tr><td>Bodh Gaya</td><td style="color:#378add">45</td><td style="color:#d85a30">55</td><td style="font-weight:500">100</td></tr></tbody>
           </table>
         </div>
       </div>
     </div>
 
-    <!-- City × Month trend -->
     <div class="section" style="margin-bottom:0">
-      <div class="section-header"><span class="section-title">City × month trend — top 10 cities</span><span class="section-hint">Normal DNF · <span style="color:var(--amber)">Unique DNF</span></span></div>
+      <div class="section-header">
+        <span class="section-title">City × month trend — top 10 cities</span>
+        <span class="section-hint">Normal DNF · <span style="color:var(--amber)">Unique DNF</span></span>
+      </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>City</th><th>Nov'25<br><span style='font-size:10px;color:var(--text-3)'>norm·uniq</span></th><th>Dec'25<br><span style='font-size:10px;color:var(--text-3)'>norm·uniq</span></th><th>Jan'26<br><span style='font-size:10px;color:var(--text-3)'>norm·uniq</span></th><th>Feb'26<br><span style='font-size:10px;color:var(--text-3)'>norm·uniq</span></th><th>Mar'26<br><span style='font-size:10px;color:var(--text-3)'>norm·uniq</span></th><th>Total</th></tr></thead>
-          <tbody><tr><td>New Delhi</td><td>4,561<br><span style="font-size:10px;color:var(--amber)">1,450</span></td><td>2,969<br><span style="font-size:10px;color:var(--amber)">1,256</span></td><td>2,364<br><span style="font-size:10px;color:var(--amber)">1,087</span></td><td>2,556<br><span style="font-size:10px;color:var(--amber)">1,257</span></td><td>2,956<br><span style="font-size:10px;color:var(--amber)">1,344</span></td><td style="font-weight:500">15,406</td></tr><tr><td>Bangalore</td><td>2,053<br><span style="font-size:10px;color:var(--amber)">719</span></td><td>1,924<br><span style="font-size:10px;color:var(--amber)">643</span></td><td>1,922<br><span style="font-size:10px;color:var(--amber)">545</span></td><td>1,699<br><span style="font-size:10px;color:var(--amber)">500</span></td><td>1,290<br><span style="font-size:10px;color:var(--amber)">552</span></td><td style="font-weight:500">8,888</td></tr><tr><td>Mumbai</td><td>1,872<br><span style="font-size:10px;color:var(--amber)">616</span></td><td>1,028<br><span style="font-size:10px;color:var(--amber)">320</span></td><td>686<br><span style="font-size:10px;color:var(--amber)">279</span></td><td>994<br><span style="font-size:10px;color:var(--amber)">483</span></td><td>893<br><span style="font-size:10px;color:var(--amber)">438</span></td><td style="font-weight:500">5,473</td></tr><tr><td>North 24 Parganas</td><td>1,568<br><span style="font-size:10px;color:var(--amber)">416</span></td><td>778<br><span style="font-size:10px;color:var(--amber)">149</span></td><td>537<br><span style="font-size:10px;color:var(--amber)">75</span></td><td>484<br><span style="font-size:10px;color:var(--amber)">86</span></td><td>298<br><span style="font-size:10px;color:var(--amber)">126</span></td><td style="font-weight:500">3,665</td></tr><tr><td>Kolhapur</td><td>1,101<br><span style="font-size:10px;color:var(--amber)">284</span></td><td>830<br><span style="font-size:10px;color:var(--amber)">248</span></td><td>654<br><span style="font-size:10px;color:var(--amber)">174</span></td><td>486<br><span style="font-size:10px;color:var(--amber)">164</span></td><td>433<br><span style="font-size:10px;color:var(--amber)">158</span></td><td style="font-weight:500">3,504</td></tr><tr><td>Pune</td><td>957<br><span style="font-size:10px;color:var(--amber)">392</span></td><td>806<br><span style="font-size:10px;color:var(--amber)">359</span></td><td>485<br><span style="font-size:10px;color:var(--amber)">238</span></td><td>570<br><span style="font-size:10px;color:var(--amber)">275</span></td><td>426<br><span style="font-size:10px;color:var(--amber)">225</span></td><td style="font-weight:500">3,244</td></tr><tr><td>Hyderabad</td><td>1,143<br><span style="font-size:10px;color:var(--amber)">330</span></td><td>509<br><span style="font-size:10px;color:var(--amber)">188</span></td><td>428<br><span style="font-size:10px;color:var(--amber)">172</span></td><td>449<br><span style="font-size:10px;color:var(--amber)">190</span></td><td>468<br><span style="font-size:10px;color:var(--amber)">268</span></td><td style="font-weight:500">2,997</td></tr><tr><td>Chennai</td><td>652<br><span style="font-size:10px;color:var(--amber)">205</span></td><td>636<br><span style="font-size:10px;color:var(--amber)">180</span></td><td>566<br><span style="font-size:10px;color:var(--amber)">157</span></td><td>429<br><span style="font-size:10px;color:var(--amber)">130</span></td><td>428<br><span style="font-size:10px;color:var(--amber)">183</span></td><td style="font-weight:500">2,711</td></tr><tr><td>Kolkata</td><td>1,192<br><span style="font-size:10px;color:var(--amber)">227</span></td><td>457<br><span style="font-size:10px;color:var(--amber)">80</span></td><td>244<br><span style="font-size:10px;color:var(--amber)">78</span></td><td>302<br><span style="font-size:10px;color:var(--amber)">92</span></td><td>296<br><span style="font-size:10px;color:var(--amber)">148</span></td><td style="font-weight:500">2,491</td></tr><tr><td>Nagpur</td><td>801<br><span style="font-size:10px;color:var(--amber)">215</span></td><td>545<br><span style="font-size:10px;color:var(--amber)">155</span></td><td>476<br><span style="font-size:10px;color:var(--amber)">178</span></td><td>438<br><span style="font-size:10px;color:var(--amber)">159</span></td><td>227<br><span style="font-size:10px;color:var(--amber)">116</span></td><td style="font-weight:500">2,487</td></tr></tbody>
+          <thead><tr>
+            <th>City</th>
+            <th style="text-align:right">Nov'25<br><span style="font-size:10px;color:var(--text-3);font-weight:400">norm · <span style="color:var(--amber)">uniq</span></span></th><th style="text-align:right">Dec'25<br><span style="font-size:10px;color:var(--text-3);font-weight:400">norm · <span style="color:var(--amber)">uniq</span></span></th><th style="text-align:right">Jan'26<br><span style="font-size:10px;color:var(--text-3);font-weight:400">norm · <span style="color:var(--amber)">uniq</span></span></th><th style="text-align:right">Feb'26<br><span style="font-size:10px;color:var(--text-3);font-weight:400">norm · <span style="color:var(--amber)">uniq</span></span></th><th style="text-align:right">Mar'26<br><span style="font-size:10px;color:var(--text-3);font-weight:400">norm · <span style="color:var(--amber)">uniq</span></span></th>
+            <th style="text-align:right">Total<br><span style="font-size:10px;color:var(--text-3);font-weight:400">normal</span></th>
+          </tr></thead>
+          <tbody><tr><td>New Delhi</td><td style="text-align:right">4,561<br><span style="font-size:10px;color:var(--amber)">1,450</span></td><td style="text-align:right">2,969<br><span style="font-size:10px;color:var(--amber)">1,256</span></td><td style="text-align:right">2,364<br><span style="font-size:10px;color:var(--amber)">1,087</span></td><td style="text-align:right">2,556<br><span style="font-size:10px;color:var(--amber)">1,257</span></td><td style="text-align:right">2,956<br><span style="font-size:10px;color:var(--amber)">1,344</span></td><td style="font-weight:600;text-align:right">15,406</td></tr><tr><td>Bangalore</td><td style="text-align:right">2,053<br><span style="font-size:10px;color:var(--amber)">719</span></td><td style="text-align:right">1,924<br><span style="font-size:10px;color:var(--amber)">643</span></td><td style="text-align:right">1,922<br><span style="font-size:10px;color:var(--amber)">545</span></td><td style="text-align:right">1,699<br><span style="font-size:10px;color:var(--amber)">500</span></td><td style="text-align:right">1,290<br><span style="font-size:10px;color:var(--amber)">552</span></td><td style="font-weight:600;text-align:right">8,888</td></tr><tr><td>Mumbai</td><td style="text-align:right">1,872<br><span style="font-size:10px;color:var(--amber)">616</span></td><td style="text-align:right">1,028<br><span style="font-size:10px;color:var(--amber)">320</span></td><td style="text-align:right">686<br><span style="font-size:10px;color:var(--amber)">279</span></td><td style="text-align:right">994<br><span style="font-size:10px;color:var(--amber)">483</span></td><td style="text-align:right">893<br><span style="font-size:10px;color:var(--amber)">438</span></td><td style="font-weight:600;text-align:right">5,473</td></tr><tr><td>North 24 Parganas</td><td style="text-align:right">1,568<br><span style="font-size:10px;color:var(--amber)">416</span></td><td style="text-align:right">778<br><span style="font-size:10px;color:var(--amber)">149</span></td><td style="text-align:right">537<br><span style="font-size:10px;color:var(--amber)">75</span></td><td style="text-align:right">484<br><span style="font-size:10px;color:var(--amber)">86</span></td><td style="text-align:right">298<br><span style="font-size:10px;color:var(--amber)">126</span></td><td style="font-weight:600;text-align:right">3,665</td></tr><tr><td>Kolhapur</td><td style="text-align:right">1,101<br><span style="font-size:10px;color:var(--amber)">284</span></td><td style="text-align:right">830<br><span style="font-size:10px;color:var(--amber)">248</span></td><td style="text-align:right">654<br><span style="font-size:10px;color:var(--amber)">174</span></td><td style="text-align:right">486<br><span style="font-size:10px;color:var(--amber)">164</span></td><td style="text-align:right">433<br><span style="font-size:10px;color:var(--amber)">158</span></td><td style="font-weight:600;text-align:right">3,504</td></tr><tr><td>Pune</td><td style="text-align:right">957<br><span style="font-size:10px;color:var(--amber)">392</span></td><td style="text-align:right">806<br><span style="font-size:10px;color:var(--amber)">359</span></td><td style="text-align:right">485<br><span style="font-size:10px;color:var(--amber)">238</span></td><td style="text-align:right">570<br><span style="font-size:10px;color:var(--amber)">275</span></td><td style="text-align:right">426<br><span style="font-size:10px;color:var(--amber)">225</span></td><td style="font-weight:600;text-align:right">3,244</td></tr><tr><td>Hyderabad</td><td style="text-align:right">1,143<br><span style="font-size:10px;color:var(--amber)">330</span></td><td style="text-align:right">509<br><span style="font-size:10px;color:var(--amber)">188</span></td><td style="text-align:right">428<br><span style="font-size:10px;color:var(--amber)">172</span></td><td style="text-align:right">449<br><span style="font-size:10px;color:var(--amber)">190</span></td><td style="text-align:right">468<br><span style="font-size:10px;color:var(--amber)">268</span></td><td style="font-weight:600;text-align:right">2,997</td></tr><tr><td>Chennai</td><td style="text-align:right">652<br><span style="font-size:10px;color:var(--amber)">205</span></td><td style="text-align:right">636<br><span style="font-size:10px;color:var(--amber)">180</span></td><td style="text-align:right">566<br><span style="font-size:10px;color:var(--amber)">157</span></td><td style="text-align:right">429<br><span style="font-size:10px;color:var(--amber)">130</span></td><td style="text-align:right">428<br><span style="font-size:10px;color:var(--amber)">183</span></td><td style="font-weight:600;text-align:right">2,711</td></tr><tr><td>Kolkata</td><td style="text-align:right">1,192<br><span style="font-size:10px;color:var(--amber)">227</span></td><td style="text-align:right">457<br><span style="font-size:10px;color:var(--amber)">80</span></td><td style="text-align:right">244<br><span style="font-size:10px;color:var(--amber)">78</span></td><td style="text-align:right">302<br><span style="font-size:10px;color:var(--amber)">92</span></td><td style="text-align:right">296<br><span style="font-size:10px;color:var(--amber)">148</span></td><td style="font-weight:600;text-align:right">2,491</td></tr><tr><td>Nagpur</td><td style="text-align:right">801<br><span style="font-size:10px;color:var(--amber)">215</span></td><td style="text-align:right">545<br><span style="font-size:10px;color:var(--amber)">155</span></td><td style="text-align:right">476<br><span style="font-size:10px;color:var(--amber)">178</span></td><td style="text-align:right">438<br><span style="font-size:10px;color:var(--amber)">159</span></td><td style="text-align:right">227<br><span style="font-size:10px;color:var(--amber)">116</span></td><td style="font-weight:600;text-align:right">2,487</td></tr></tbody>
         </table>
       </div>
     </div>
   </div>
 
-  <!-- ── Unique Gen Analysis ─────────────────────────────── -->
+<!-- ── Unique Gen Analysis ─────────────────────────────── -->
   <div style="border-top:2px solid var(--border-md);margin:28px 0 20px;padding-top:20px;">
     <div style="font-size:16px;font-weight:500;color:var(--text);margin-bottom:4px;">Unique Failure Analysis</div>
     <div style="font-size:13px;color:var(--text-2);margin-bottom:20px;">60-day lookback dedup · 3,53,667 unique failed out of 13,62,577 total failed · Nov 2025 – Mar 2026</div>
