@@ -1750,8 +1750,16 @@ function renderT1() {
     // Build the inner model table structure
     var innerHtml = '<div class="table-wrap expand-inner"><table class="expand-table"><thead><tr>' +
       '<th style="text-align:left;padding-left:0">Model</th>' +
-      '<th>Generated</th><th>Fail%</th><th>Trigger%</th><th>Retailed</th>' +
-      '<th>CR%</th><th>L-to-R%</th><th>OEM dupe%</th><th>DNF%</th>' +
+      '<th>Generated</th>' +
+      '<th>Triggered<span style="display:block;font-weight:400;font-size:10px;color:var(--text-3)">% of Gen</span></th>' +
+      '<th>Failed<span style="display:block;font-weight:400;font-size:10px;color:var(--text-3)">% of Gen</span></th>' +
+      '<th>API Hit<span style="display:block;font-weight:400;font-size:10px;color:var(--text-3)">Fail+Trig</span></th>' +
+      '<th>Retailed</th>' +
+      '<th>CR%<span style="display:block;font-weight:400;font-size:10px;color:var(--text-3)">Ret÷Trig</span></th>' +
+      '<th>Unique Gen</th>' +
+      '<th>Unique Failed<span style="display:block;font-weight:400;font-size:10px;color:var(--text-3)">% of Uniq Gen</span></th>' +
+      '<th>DNF<span style="display:block;font-weight:400;font-size:10px;color:var(--text-3)">Normal · Unique</span></th>' +
+      '<th>OEM Dupe<span style="display:block;font-weight:400;font-size:10px;color:var(--text-3)">Normal · Unique</span></th>' +
       '</tr></thead><tbody id="model-dyn-tbody-' + key + '"></tbody></table></div>';
     expandDiv.innerHTML = innerHtml;
     expandTd.appendChild(expandDiv);
@@ -1851,45 +1859,514 @@ function buildMonthTableT1(channel, modelName, modelFilter, monthFilter) {
       (!monthFilter || !monthFilter.length || monthFilter.includes(r.mo));
   }).sort(function(a,b) { return MONTHS.indexOf(a.mo) - MONTHS.indexOf(b.mo); });
   if (!rows.length) return '<div style="padding:10px;font-size:11px;color:#888">No month data</div>';
-  var tgen=0,tfail=0,ttrig=0,tret=0;
+  var tgen=0,tfail=0,ttrig=0,tret=0,tdnf=0,toem=0;
   var rowsHtml = rows.map(function(r) {
-    tgen+=r.gen; tfail+=r.fail; ttrig+=r.trig; tret+=r.ret;
+    var dnf = Math.round(r.gen * r.dnf_pct / 100);
+    var oem = Math.round(r.gen * r.oem_pct / 100);
+    var api = r.fail + r.trig;
+    tgen+=r.gen; tfail+=r.fail; ttrig+=r.trig; tret+=r.ret; tdnf+=dnf; toem+=oem;
+    var ug = UNIQUE_GEN_CMM.find(function(u){return u.ch===channel&&u.m===modelName&&u.mo===r.mo;});
     return '<tr style="font-size:10.5px">'+
-      '<td style="padding:4px 8px">'+r.mo+'</td>'+
+      '<td style="padding:4px 8px;font-weight:500">'+r.mo+'</td>'+
       '<td style="padding:4px 8px;text-align:right">'+fmt(r.gen)+'</td>'+
-      '<td style="padding:4px 8px;text-align:right">'+r.fail_pct.toFixed(1)+'%</td>'+
-      '<td style="padding:4px 8px;text-align:right">'+r.trig_pct.toFixed(1)+'%</td>'+
+      '<td style="padding:4px 8px;text-align:right;'+colTrig(r.trig_pct)+'">'+fmt(r.trig)+'<br><span style="font-size:9px;opacity:.7">'+r.trig_pct.toFixed(1)+'%</span></td>'+
+      '<td style="padding:4px 8px;text-align:right;'+colFail(r.fail_pct)+'">'+fmt(r.fail)+'<br><span style="font-size:9px;opacity:.7">'+r.fail_pct.toFixed(1)+'%</span></td>'+
+      '<td style="padding:4px 8px;text-align:right">'+fmt(api)+'</td>'+
       '<td style="padding:4px 8px;text-align:right">'+fmt(r.ret)+'</td>'+
       '<td style="padding:4px 8px;text-align:right">'+(r.cr_pct?r.cr_pct.toFixed(2)+'%':'—')+'</td>'+
-      '<td style="padding:4px 8px;text-align:right">'+r.l_to_r.toFixed(2)+'%</td>'+
-      '<td style="padding:4px 8px;text-align:right">'+r.oem_pct+'%</td>'+
-      '<td style="padding:4px 8px;text-align:right">'+r.dnf_pct+'%</td>'+
+      '<td style="padding:4px 8px;text-align:right">'+(ug?fmt(ug.total):'—')+'</td>'+
+      '<td style="padding:4px 8px;text-align:right">'+(ug?fmt(ug.failed)+'<br><span style="font-size:9px;opacity:.7">'+(ug.total>0?(ug.failed/ug.total*100).toFixed(1):0)+'%</span>':'—')+'</td>'+
+      '<td style="padding:4px 8px;text-align:right;'+colDnf(r.dnf_pct)+'">'+fmt(dnf)+'<br><span style="font-size:9px;color:var(--amber)">'+(ug?fmt(ug.dnf):'—')+'</span></td>'+
+      '<td style="padding:4px 8px;text-align:right;'+colOem(r.oem_pct)+'">'+fmt(oem)+'<br><span style="font-size:9px;color:var(--amber)">'+(ug?fmt(ug.oem):'—')+'</span></td>'+
     '</tr>';
   }).join('');
+  var tfp=tgen>0?tfail/tgen*100:0, ttp=tgen>0?ttrig/tgen*100:0, tcr=ttrig>0?tret/ttrig*100:0;
+  var tdnfpct=tgen>0?tdnf/tgen*100:0, toempct=tgen>0?toem/tgen*100:0;
   return '<table style="width:100%;border-collapse:collapse;margin:6px 0 10px">'+
     '<thead><tr style="background:var(--bg-3);font-size:9px;text-transform:uppercase;letter-spacing:.06em">'+
     '<th style="padding:4px 8px;text-align:left">Month</th>'+
     '<th style="padding:4px 8px;text-align:right">Generated</th>'+
-    '<th style="padding:4px 8px;text-align:right">Fail%</th>'+
-    '<th style="padding:4px 8px;text-align:right">Trig%</th>'+
+    '<th style="padding:4px 8px;text-align:right">Triggered<br>% of Gen</th>'+
+    '<th style="padding:4px 8px;text-align:right">Failed<br>% of Gen</th>'+
+    '<th style="padding:4px 8px;text-align:right">API Hit<br>Fail+Trig</th>'+
     '<th style="padding:4px 8px;text-align:right">Retailed</th>'+
     '<th style="padding:4px 8px;text-align:right">CR%</th>'+
-    '<th style="padding:4px 8px;text-align:right">L-to-R%</th>'+
-    '<th style="padding:4px 8px;text-align:right">OEM Dupe%</th>'+
-    '<th style="padding:4px 8px;text-align:right">DNF%</th>'+
+    '<th style="padding:4px 8px;text-align:right">Uniq Gen</th>'+
+    '<th style="padding:4px 8px;text-align:right">Uniq Failed</th>'+
+    '<th style="padding:4px 8px;text-align:right">DNF<br>Norm·Uniq</th>'+
+    '<th style="padding:4px 8px;text-align:right">OEM Dupe<br>Norm·Uniq</th>'+
     '</tr></thead><tbody>'+rowsHtml+'</tbody>'+
     '<tfoot><tr style="font-size:10.5px;font-weight:600;border-top:1.5px solid var(--border-md);background:var(--bg-2)">'+
     '<td style="padding:4px 8px">Total</td>'+
     '<td style="padding:4px 8px;text-align:right">'+fmt(tgen)+'</td>'+
-    '<td style="padding:4px 8px;text-align:right">'+(tgen>0?(tfail/tgen*100).toFixed(1)+'%':'—')+'</td>'+
-    '<td style="padding:4px 8px;text-align:right">'+(tgen>0?(ttrig/tgen*100).toFixed(1)+'%':'—')+'</td>'+
+    '<td style="padding:4px 8px;text-align:right;'+colTrig(ttp)+'">'+fmt(ttrig)+'<br><span style="font-size:9px;opacity:.7">'+ttp.toFixed(1)+'%</span></td>'+
+    '<td style="padding:4px 8px;text-align:right;'+colFail(tfp)+'">'+fmt(tfail)+'<br><span style="font-size:9px;opacity:.7">'+tfp.toFixed(1)+'%</span></td>'+
+    '<td style="padding:4px 8px;text-align:right">'+fmt(tfail+ttrig)+'</td>'+
     '<td style="padding:4px 8px;text-align:right">'+fmt(tret)+'</td>'+
-    '<td style="padding:4px 8px;text-align:right">'+(ttrig>0?(tret/ttrig*100).toFixed(2)+'%':'—')+'</td>'+
-    '<td style="padding:4px 8px;text-align:right">'+(tgen>0?(tret/tgen*100).toFixed(2)+'%':'—')+'</td>'+
+    '<td style="padding:4px 8px;text-align:right">'+(tcr?tcr.toFixed(2)+'%':'—')+'</td>'+
     '<td style="padding:4px 8px;text-align:right">—</td>'+
     '<td style="padding:4px 8px;text-align:right">—</td>'+
+    '<td style="padding:4px 8px;text-align:right;'+colDnf(tdnfpct)+'">'+fmt(tdnf)+'<br><span style="font-size:9px;color:var(--amber)">—</span></td>'+
+    '<td style="padding:4px 8px;text-align:right;'+colOem(toempct)+'">'+fmt(toem)+'<br><span style="font-size:9px;color:var(--amber)">—</span></td>'+
     '</tr></tfoot></table>';
 }
+
+var UNIQUE_GEN_CMM = [
+  {ch:"GDN",m:"Apache",mo:"Dec'25",total:7485,failed:1975,dnf:638,oem:1133},
+  {ch:"GDN",m:"Apache",mo:"Feb'26",total:6004,failed:2177,dnf:938,oem:925},
+  {ch:"GDN",m:"Apache",mo:"Jan'26",total:6054,failed:2093,dnf:981,oem:905},
+  {ch:"GDN",m:"Apache",mo:"Mar'26",total:5620,failed:1757,dnf:663,oem:961},
+  {ch:"GDN",m:"Apache",mo:"Nov'25",total:4919,failed:2142,dnf:993,oem:1017},
+  {ch:"GDN",m:"Jupiter",mo:"Dec'25",total:11470,failed:3296,dnf:622,oem:2243},
+  {ch:"GDN",m:"Jupiter",mo:"Feb'26",total:6991,failed:2715,dnf:485,oem:1560},
+  {ch:"GDN",m:"Jupiter",mo:"Jan'26",total:7790,failed:2517,dnf:391,oem:1619},
+  {ch:"GDN",m:"Jupiter",mo:"Mar'26",total:6300,failed:2262,dnf:397,oem:1338},
+  {ch:"GDN",m:"Jupiter",mo:"Nov'25",total:11496,failed:3641,dnf:828,oem:2397},
+  {ch:"GDN",m:"NTORQ",mo:"Dec'25",total:3501,failed:1320,dnf:561,oem:646},
+  {ch:"GDN",m:"NTORQ",mo:"Feb'26",total:3270,failed:1175,dnf:323,oem:609},
+  {ch:"GDN",m:"NTORQ",mo:"Jan'26",total:3053,failed:1156,dnf:390,oem:598},
+  {ch:"GDN",m:"NTORQ",mo:"Mar'26",total:3064,failed:997,dnf:369,oem:486},
+  {ch:"GDN",m:"NTORQ",mo:"Nov'25",total:5587,failed:1980,dnf:881,oem:955},
+  {ch:"GDN",m:"Orbiter",mo:"Dec'25",total:439,failed:439,dnf:435,oem:0},
+  {ch:"GDN",m:"Orbiter",mo:"Feb'26",total:341,failed:339,dnf:338,oem:0},
+  {ch:"GDN",m:"Orbiter",mo:"Jan'26",total:210,failed:208,dnf:203,oem:0},
+  {ch:"GDN",m:"Orbiter",mo:"Mar'26",total:926,failed:869,dnf:864,oem:0},
+  {ch:"GDN",m:"Orbiter",mo:"Nov'25",total:308,failed:308,dnf:304,oem:0},
+  {ch:"GDN",m:"Other",mo:"Dec'25",total:18,failed:18,dnf:18,oem:0},
+  {ch:"GDN",m:"Other",mo:"Feb'26",total:21,failed:21,dnf:21,oem:0},
+  {ch:"GDN",m:"Other",mo:"Jan'26",total:17,failed:17,dnf:17,oem:0},
+  {ch:"GDN",m:"Other",mo:"Mar'26",total:35,failed:35,dnf:33,oem:0},
+  {ch:"GDN",m:"Other",mo:"Nov'25",total:17,failed:17,dnf:17,oem:0},
+  {ch:"GDN",m:"Radeon",mo:"Dec'25",total:1390,failed:457,dnf:98,oem:288},
+  {ch:"GDN",m:"Radeon",mo:"Feb'26",total:1058,failed:450,dnf:162,oem:206},
+  {ch:"GDN",m:"Radeon",mo:"Jan'26",total:1070,failed:410,dnf:82,oem:252},
+  {ch:"GDN",m:"Radeon",mo:"Mar'26",total:1187,failed:586,dnf:269,oem:236},
+  {ch:"GDN",m:"Radeon",mo:"Nov'25",total:1145,failed:536,dnf:281,oem:196},
+  {ch:"GDN",m:"Raider",mo:"Dec'25",total:5392,failed:1582,dnf:271,oem:1133},
+  {ch:"GDN",m:"Raider",mo:"Feb'26",total:4642,failed:1480,dnf:203,oem:901},
+  {ch:"GDN",m:"Raider",mo:"Jan'26",total:4857,failed:1516,dnf:235,oem:952},
+  {ch:"GDN",m:"Raider",mo:"Mar'26",total:4788,failed:1285,dnf:97,oem:916},
+  {ch:"GDN",m:"Raider",mo:"Nov'25",total:6535,failed:1863,dnf:349,oem:1296},
+  {ch:"GDN",m:"Ronin",mo:"Dec'25",total:2995,failed:1205,dnf:801,oem:307},
+  {ch:"GDN",m:"Ronin",mo:"Feb'26",total:2398,failed:1017,dnf:471,oem:296},
+  {ch:"GDN",m:"Ronin",mo:"Jan'26",total:2758,failed:1171,dnf:598,oem:355},
+  {ch:"GDN",m:"Ronin",mo:"Mar'26",total:3074,failed:998,dnf:425,oem:370},
+  {ch:"GDN",m:"Ronin",mo:"Nov'25",total:3761,failed:1741,dnf:1095,oem:522},
+  {ch:"GDN",m:"Sport",mo:"Dec'25",total:2834,failed:933,dnf:114,oem:724},
+  {ch:"GDN",m:"Sport",mo:"Feb'26",total:1687,failed:615,dnf:53,oem:422},
+  {ch:"GDN",m:"Sport",mo:"Jan'26",total:1778,failed:614,dnf:46,oem:469},
+  {ch:"GDN",m:"Sport",mo:"Mar'26",total:1470,failed:439,dnf:21,oem:328},
+  {ch:"GDN",m:"Sport",mo:"Nov'25",total:2944,failed:939,dnf:115,oem:723},
+  {ch:"GDN",m:"Star City",mo:"Dec'25",total:577,failed:368,dnf:259,oem:84},
+  {ch:"GDN",m:"Star City",mo:"Feb'26",total:313,failed:309,dnf:299,oem:0},
+  {ch:"GDN",m:"Star City",mo:"Jan'26",total:415,failed:233,dnf:130,oem:74},
+  {ch:"GDN",m:"Star City",mo:"Mar'26",total:355,failed:347,dnf:342,oem:0},
+  {ch:"GDN",m:"Star City",mo:"Nov'25",total:1399,failed:1135,dnf:1010,oem:91},
+  {ch:"GDN",m:"XL100",mo:"Dec'25",total:1930,failed:610,dnf:86,oem:463},
+  {ch:"GDN",m:"XL100",mo:"Feb'26",total:1505,failed:512,dnf:53,oem:332},
+  {ch:"GDN",m:"XL100",mo:"Jan'26",total:1771,failed:549,dnf:51,oem:407},
+  {ch:"GDN",m:"XL100",mo:"Mar'26",total:1183,failed:366,dnf:29,oem:262},
+  {ch:"GDN",m:"XL100",mo:"Nov'25",total:2677,failed:778,dnf:78,oem:621},
+  {ch:"GDN",m:"Zest",mo:"Dec'25",total:526,failed:149,dnf:29,oem:106},
+  {ch:"GDN",m:"Zest",mo:"Feb'26",total:520,failed:164,dnf:22,oem:90},
+  {ch:"GDN",m:"Zest",mo:"Jan'26",total:787,failed:237,dnf:34,oem:159},
+  {ch:"GDN",m:"Zest",mo:"Mar'26",total:341,failed:104,dnf:14,oem:65},
+  {ch:"GDN",m:"Zest",mo:"Nov'25",total:939,failed:225,dnf:47,oem:153},
+  {ch:"GDN",m:"iQube",mo:"Dec'25",total:5246,failed:1924,dnf:897,oem:925},
+  {ch:"GDN",m:"iQube",mo:"Feb'26",total:4534,failed:1744,dnf:655,oem:752},
+  {ch:"GDN",m:"iQube",mo:"Jan'26",total:3779,failed:1434,dnf:580,oem:610},
+  {ch:"GDN",m:"iQube",mo:"Mar'26",total:4980,failed:1720,dnf:573,oem:778},
+  {ch:"GDN",m:"iQube",mo:"Nov'25",total:6392,failed:2414,dnf:1151,oem:1126},
+  {ch:"Meta",m:"Apache",mo:"Dec'25",total:17256,failed:2728,dnf:207,oem:2307},
+  {ch:"Meta",m:"Apache",mo:"Feb'26",total:22501,failed:4713,dnf:164,oem:2516},
+  {ch:"Meta",m:"Apache",mo:"Jan'26",total:20479,failed:3777,dnf:126,oem:2573},
+  {ch:"Meta",m:"Apache",mo:"Mar'26",total:23362,failed:4006,dnf:222,oem:2391},
+  {ch:"Meta",m:"Apache",mo:"Nov'25",total:18503,failed:3177,dnf:339,oem:2541},
+  {ch:"Meta",m:"Jupiter",mo:"Dec'25",total:15981,failed:3605,dnf:403,oem:2568},
+  {ch:"Meta",m:"Jupiter",mo:"Feb'26",total:19026,failed:4901,dnf:286,oem:2978},
+  {ch:"Meta",m:"Jupiter",mo:"Jan'26",total:16664,failed:4019,dnf:270,oem:2734},
+  {ch:"Meta",m:"Jupiter",mo:"Mar'26",total:21552,failed:4715,dnf:426,oem:2843},
+  {ch:"Meta",m:"Jupiter",mo:"Nov'25",total:18979,failed:4193,dnf:423,oem:2902},
+  {ch:"Meta",m:"NTORQ",mo:"Dec'25",total:8637,failed:1475,dnf:193,oem:1148},
+  {ch:"Meta",m:"NTORQ",mo:"Feb'26",total:10417,failed:2705,dnf:105,oem:1226},
+  {ch:"Meta",m:"NTORQ",mo:"Jan'26",total:9727,failed:2086,dnf:101,oem:1131},
+  {ch:"Meta",m:"NTORQ",mo:"Mar'26",total:8577,failed:2148,dnf:98,oem:1001},
+  {ch:"Meta",m:"NTORQ",mo:"Nov'25",total:10754,failed:1729,dnf:222,oem:1326},
+  {ch:"Meta",m:"Orbiter",mo:"Dec'25",total:30,failed:29,dnf:29,oem:0},
+  {ch:"Meta",m:"Orbiter",mo:"Feb'26",total:18,failed:13,dnf:13,oem:0},
+  {ch:"Meta",m:"Orbiter",mo:"Jan'26",total:20,failed:20,dnf:20,oem:0},
+  {ch:"Meta",m:"Orbiter",mo:"Mar'26",total:43,failed:33,dnf:33,oem:0},
+  {ch:"Meta",m:"Orbiter",mo:"Nov'25",total:30,failed:29,dnf:28,oem:0},
+  {ch:"Meta",m:"Other",mo:"Dec'25",total:3,failed:3,dnf:3,oem:0},
+  {ch:"Meta",m:"Other",mo:"Feb'26",total:3,failed:3,dnf:3,oem:0},
+  {ch:"Meta",m:"Other",mo:"Jan'26",total:2,failed:2,dnf:2,oem:0},
+  {ch:"Meta",m:"Other",mo:"Mar'26",total:2,failed:2,dnf:2,oem:0},
+  {ch:"Meta",m:"Other",mo:"Nov'25",total:4,failed:4,dnf:4,oem:0},
+  {ch:"Meta",m:"Radeon",mo:"Dec'25",total:1927,failed:546,dnf:50,oem:465},
+  {ch:"Meta",m:"Radeon",mo:"Feb'26",total:1714,failed:553,dnf:20,oem:393},
+  {ch:"Meta",m:"Radeon",mo:"Jan'26",total:2389,failed:768,dnf:41,oem:588},
+  {ch:"Meta",m:"Radeon",mo:"Mar'26",total:1922,failed:597,dnf:27,oem:469},
+  {ch:"Meta",m:"Radeon",mo:"Nov'25",total:2832,failed:612,dnf:143,oem:419},
+  {ch:"Meta",m:"Raider",mo:"Dec'25",total:13474,failed:2684,dnf:442,oem:2002},
+  {ch:"Meta",m:"Raider",mo:"Feb'26",total:18020,failed:4544,dnf:378,oem:2319},
+  {ch:"Meta",m:"Raider",mo:"Jan'26",total:15289,failed:3514,dnf:332,oem:2265},
+  {ch:"Meta",m:"Raider",mo:"Mar'26",total:18994,failed:4402,dnf:450,oem:2117},
+  {ch:"Meta",m:"Raider",mo:"Nov'25",total:17139,failed:3217,dnf:459,oem:2426},
+  {ch:"Meta",m:"Ronin",mo:"Dec'25",total:195,failed:119,dnf:57,oem:49},
+  {ch:"Meta",m:"Ronin",mo:"Feb'26",total:397,failed:1506,dnf:124,oem:1159},
+  {ch:"Meta",m:"Ronin",mo:"Jan'26",total:295,failed:958,dnf:77,oem:764},
+  {ch:"Meta",m:"Ronin",mo:"Mar'26",total:289,failed:886,dnf:95,oem:725},
+  {ch:"Meta",m:"Ronin",mo:"Nov'25",total:273,failed:188,dnf:63,oem:113},
+  {ch:"Meta",m:"Sport",mo:"Dec'25",total:9518,failed:1728,dnf:180,oem:1367},
+  {ch:"Meta",m:"Sport",mo:"Feb'26",total:7432,failed:1660,dnf:18,oem:1121},
+  {ch:"Meta",m:"Sport",mo:"Jan'26",total:10177,failed:2073,dnf:111,oem:1372},
+  {ch:"Meta",m:"Sport",mo:"Mar'26",total:6486,failed:1287,dnf:17,oem:990},
+  {ch:"Meta",m:"Sport",mo:"Nov'25",total:9059,failed:1593,dnf:105,oem:1305},
+  {ch:"Meta",m:"Star City",mo:"Dec'25",total:114,failed:109,dnf:81,oem:16},
+  {ch:"Meta",m:"Star City",mo:"Feb'26",total:58,failed:58,dnf:54,oem:2},
+  {ch:"Meta",m:"Star City",mo:"Jan'26",total:64,failed:55,dnf:42,oem:11},
+  {ch:"Meta",m:"Star City",mo:"Mar'26",total:27,failed:20,dnf:20,oem:0},
+  {ch:"Meta",m:"Star City",mo:"Nov'25",total:445,failed:442,dnf:416,oem:18},
+  {ch:"Meta",m:"XL100",mo:"Dec'25",total:4727,failed:913,dnf:101,oem:723},
+  {ch:"Meta",m:"XL100",mo:"Feb'26",total:7113,failed:1992,dnf:56,oem:901},
+  {ch:"Meta",m:"XL100",mo:"Jan'26",total:5921,failed:1406,dnf:61,oem:902},
+  {ch:"Meta",m:"XL100",mo:"Mar'26",total:5801,failed:1627,dnf:74,oem:688},
+  {ch:"Meta",m:"XL100",mo:"Nov'25",total:6177,failed:1000,dnf:81,oem:795},
+  {ch:"Meta",m:"Zest",mo:"Dec'25",total:6,failed:1,dnf:0,oem:1},
+  {ch:"Meta",m:"Zest",mo:"Feb'26",total:135,failed:51,dnf:0,oem:45},
+  {ch:"Meta",m:"Zest",mo:"Jan'26",total:10,failed:6,dnf:0,oem:4},
+  {ch:"Meta",m:"Zest",mo:"Mar'26",total:223,failed:108,dnf:2,oem:95},
+  {ch:"Meta",m:"Zest",mo:"Nov'25",total:21,failed:18,dnf:10,oem:7},
+  {ch:"Meta",m:"iQube",mo:"Dec'25",total:13914,failed:3597,dnf:1157,oem:2172},
+  {ch:"Meta",m:"iQube",mo:"Feb'26",total:17304,failed:5199,dnf:1118,oem:2724},
+  {ch:"Meta",m:"iQube",mo:"Jan'26",total:14856,failed:4455,dnf:1040,oem:2595},
+  {ch:"Meta",m:"iQube",mo:"Mar'26",total:19132,failed:5876,dnf:1334,oem:3371},
+  {ch:"Meta",m:"iQube",mo:"Nov'25",total:19718,failed:5020,dnf:1511,oem:3124},
+  {ch:"Organic",m:"Apache",mo:"Dec'25",total:16086,failed:6862,dnf:2723,oem:3714},
+  {ch:"Organic",m:"Apache",mo:"Feb'26",total:14237,failed:6335,dnf:2747,oem:2949},
+  {ch:"Organic",m:"Apache",mo:"Jan'26",total:16661,failed:7159,dnf:2755,oem:3867},
+  {ch:"Organic",m:"Apache",mo:"Mar'26",total:15536,failed:6166,dnf:2889,oem:2922},
+  {ch:"Organic",m:"Apache",mo:"Nov'25",total:14353,failed:7127,dnf:3561,oem:3106},
+  {ch:"Organic",m:"Jupiter",mo:"Dec'25",total:15446,failed:5668,dnf:756,oem:4247},
+  {ch:"Organic",m:"Jupiter",mo:"Feb'26",total:8335,failed:4200,dnf:859,oem:2605},
+  {ch:"Organic",m:"Jupiter",mo:"Jan'26",total:10671,failed:4553,dnf:649,oem:3161},
+  {ch:"Organic",m:"Jupiter",mo:"Mar'26",total:10939,failed:4845,dnf:811,oem:2809},
+  {ch:"Organic",m:"Jupiter",mo:"Nov'25",total:13361,failed:6040,dnf:1953,oem:3586},
+  {ch:"Organic",m:"NTORQ",mo:"Dec'25",total:4769,failed:2863,dnf:1608,oem:1068},
+  {ch:"Organic",m:"NTORQ",mo:"Feb'26",total:9785,failed:3972,dnf:1580,oem:1677},
+  {ch:"Organic",m:"NTORQ",mo:"Jan'26",total:7779,failed:3586,dnf:1773,oem:1415},
+  {ch:"Organic",m:"NTORQ",mo:"Mar'26",total:10588,failed:3947,dnf:1796,oem:1618},
+  {ch:"Organic",m:"NTORQ",mo:"Nov'25",total:6568,failed:4259,dnf:2853,oem:1202},
+  {ch:"Organic",m:"Orbiter",mo:"Dec'25",total:1441,failed:1436,dnf:1422,oem:0},
+  {ch:"Organic",m:"Orbiter",mo:"Feb'26",total:1106,failed:1084,dnf:1064,oem:0},
+  {ch:"Organic",m:"Orbiter",mo:"Jan'26",total:1204,failed:1196,dnf:1174,oem:0},
+  {ch:"Organic",m:"Orbiter",mo:"Mar'26",total:3718,failed:3555,dnf:3520,oem:0},
+  {ch:"Organic",m:"Orbiter",mo:"Nov'25",total:1259,failed:1257,dnf:1233,oem:0},
+  {ch:"Organic",m:"Other",mo:"Dec'25",total:232,failed:230,dnf:221,oem:0},
+  {ch:"Organic",m:"Other",mo:"Feb'26",total:193,failed:192,dnf:191,oem:0},
+  {ch:"Organic",m:"Other",mo:"Jan'26",total:219,failed:219,dnf:216,oem:0},
+  {ch:"Organic",m:"Other",mo:"Mar'26",total:279,failed:270,dnf:268,oem:0},
+  {ch:"Organic",m:"Other",mo:"Nov'25",total:316,failed:316,dnf:315,oem:0},
+  {ch:"Organic",m:"Radeon",mo:"Dec'25",total:3309,failed:1524,dnf:635,oem:683},
+  {ch:"Organic",m:"Radeon",mo:"Feb'26",total:3220,failed:1568,dnf:591,oem:671},
+  {ch:"Organic",m:"Radeon",mo:"Jan'26",total:3270,failed:1386,dnf:424,oem:724},
+  {ch:"Organic",m:"Radeon",mo:"Mar'26",total:3761,failed:2130,dnf:1084,oem:787},
+  {ch:"Organic",m:"Radeon",mo:"Nov'25",total:2685,failed:2179,dnf:1806,oem:300},
+  {ch:"Organic",m:"Raider",mo:"Dec'25",total:10941,failed:3610,dnf:515,oem:2664},
+  {ch:"Organic",m:"Raider",mo:"Feb'26",total:10131,failed:3545,dnf:392,oem:2315},
+  {ch:"Organic",m:"Raider",mo:"Jan'26",total:10315,failed:3573,dnf:369,oem:2541},
+  {ch:"Organic",m:"Raider",mo:"Mar'26",total:11551,failed:3164,dnf:262,oem:2301},
+  {ch:"Organic",m:"Raider",mo:"Nov'25",total:9459,failed:3424,dnf:684,oem:2450},
+  {ch:"Organic",m:"Ronin",mo:"Dec'25",total:6573,failed:3076,dnf:1685,oem:1105},
+  {ch:"Organic",m:"Ronin",mo:"Feb'26",total:5834,failed:2943,dnf:1372,oem:966},
+  {ch:"Organic",m:"Ronin",mo:"Jan'26",total:6114,failed:2941,dnf:1370,oem:1034},
+  {ch:"Organic",m:"Ronin",mo:"Mar'26",total:6699,failed:2668,dnf:1176,oem:1036},
+  {ch:"Organic",m:"Ronin",mo:"Nov'25",total:5815,failed:3022,dnf:1676,oem:1117},
+  {ch:"Organic",m:"Scooty",mo:"Dec'25",total:10,failed:10,dnf:9,oem:0},
+  {ch:"Organic",m:"Scooty",mo:"Feb'26",total:5,failed:5,dnf:5,oem:0},
+  {ch:"Organic",m:"Scooty",mo:"Jan'26",total:15,failed:15,dnf:13,oem:0},
+  {ch:"Organic",m:"Scooty",mo:"Mar'26",total:15,failed:2,dnf:0,oem:0},
+  {ch:"Organic",m:"Scooty",mo:"Nov'25",total:23,failed:22,dnf:22,oem:0},
+  {ch:"Organic",m:"Sport",mo:"Dec'25",total:4003,failed:1457,dnf:135,oem:1170},
+  {ch:"Organic",m:"Sport",mo:"Feb'26",total:3115,failed:1195,dnf:97,oem:835},
+  {ch:"Organic",m:"Sport",mo:"Jan'26",total:3674,failed:1351,dnf:117,oem:1017},
+  {ch:"Organic",m:"Sport",mo:"Mar'26",total:3397,failed:1147,dnf:91,oem:863},
+  {ch:"Organic",m:"Sport",mo:"Nov'25",total:3294,failed:1378,dnf:240,oem:1024},
+  {ch:"Organic",m:"Star City",mo:"Dec'25",total:1871,failed:1560,dnf:1244,oem:204},
+  {ch:"Organic",m:"Star City",mo:"Feb'26",total:1739,failed:1711,dnf:1631,oem:3},
+  {ch:"Organic",m:"Star City",mo:"Jan'26",total:1674,failed:1404,dnf:1101,oem:182},
+  {ch:"Organic",m:"Star City",mo:"Mar'26",total:1414,failed:1364,dnf:1325,oem:5},
+  {ch:"Organic",m:"Star City",mo:"Nov'25",total:5154,failed:4852,dnf:4547,oem:198},
+  {ch:"Organic",m:"Victor",mo:"Feb'26",total:1,failed:1,dnf:1,oem:0},
+  {ch:"Organic",m:"Wego",mo:"Mar'26",total:1,failed:0,dnf:0,oem:0},
+  {ch:"Organic",m:"Wego",mo:"Nov'25",total:1,failed:1,dnf:1,oem:0},
+  {ch:"Organic",m:"XL100",mo:"Dec'25",total:2762,failed:971,dnf:82,oem:791},
+  {ch:"Organic",m:"XL100",mo:"Feb'26",total:2263,failed:853,dnf:67,oem:566},
+  {ch:"Organic",m:"XL100",mo:"Jan'26",total:2619,failed:997,dnf:87,oem:695},
+  {ch:"Organic",m:"XL100",mo:"Mar'26",total:2294,failed:690,dnf:52,oem:468},
+  {ch:"Organic",m:"XL100",mo:"Nov'25",total:2965,failed:975,dnf:113,oem:793},
+  {ch:"Organic",m:"Zest",mo:"Dec'25",total:659,failed:267,dnf:23,oem:217},
+  {ch:"Organic",m:"Zest",mo:"Feb'26",total:527,failed:233,dnf:22,oem:161},
+  {ch:"Organic",m:"Zest",mo:"Jan'26",total:667,failed:271,dnf:14,oem:220},
+  {ch:"Organic",m:"Zest",mo:"Mar'26",total:491,failed:201,dnf:11,oem:160},
+  {ch:"Organic",m:"Zest",mo:"Nov'25",total:789,failed:381,dnf:153,oem:208},
+  {ch:"Organic",m:"iQube",mo:"Dec'25",total:8185,failed:3731,dnf:1442,oem:2070},
+  {ch:"Organic",m:"iQube",mo:"Feb'26",total:6267,failed:2919,dnf:933,oem:1445},
+  {ch:"Organic",m:"iQube",mo:"Jan'26",total:6698,failed:3218,dnf:1101,oem:1659},
+  {ch:"Organic",m:"iQube",mo:"Mar'26",total:11406,failed:4629,dnf:1534,oem:2332},
+  {ch:"Organic",m:"iQube",mo:"Nov'25",total:8053,failed:3630,dnf:1521,oem:1931}
+];
+
+var UNIQUE_GEN_CHANNEL_MODEL = [
+  {channel:"GDN",model:"Apache",total:30082,failed:10144,fail_pct:33.7,triggered:19744,trig_pct:65.6,retailed:1721,cr_pct:8.72,dnf:4213,oem_dupe:4941},
+  {channel:"GDN",model:"Jupiter",total:44047,failed:14431,fail_pct:32.8,triggered:29323,trig_pct:66.6,retailed:3608,cr_pct:12.3,dnf:2723,oem_dupe:9157},
+  {channel:"GDN",model:"NTORQ",total:18475,failed:6628,fail_pct:35.9,triggered:11690,trig_pct:63.3,retailed:1128,cr_pct:9.65,dnf:2524,oem_dupe:3294},
+  {channel:"GDN",model:"Orbiter",total:2224,failed:2163,fail_pct:97.3,triggered:0,trig_pct:0.0,retailed:0,cr_pct:0.0,dnf:2144,oem_dupe:0},
+  {channel:"GDN",model:"Other",total:108,failed:108,fail_pct:100.0,triggered:0,trig_pct:0.0,retailed:0,cr_pct:0.0,dnf:106,oem_dupe:0},
+  {channel:"GDN",model:"Radeon",total:5850,failed:2439,fail_pct:41.7,triggered:3372,trig_pct:57.6,retailed:326,cr_pct:9.67,dnf:892,oem_dupe:1178},
+  {channel:"GDN",model:"Raider",total:26214,failed:7726,fail_pct:29.5,triggered:18327,trig_pct:69.9,retailed:1769,cr_pct:9.65,dnf:1155,oem_dupe:5198},
+  {channel:"GDN",model:"Ronin",total:14986,failed:6132,fail_pct:40.9,triggered:8759,trig_pct:58.4,retailed:660,cr_pct:7.54,dnf:3390,oem_dupe:1850},
+  {channel:"GDN",model:"Sport",total:10713,failed:3540,fail_pct:33.0,triggered:7084,trig_pct:66.1,retailed:728,cr_pct:10.28,dnf:349,oem_dupe:2666},
+  {channel:"GDN",model:"Star City",total:3059,failed:2392,fail_pct:78.2,triggered:656,trig_pct:21.4,retailed:71,cr_pct:10.82,dnf:2040,oem_dupe:249},
+  {channel:"GDN",model:"XL100",total:9066,failed:2815,fail_pct:31.1,triggered:6164,trig_pct:68.0,retailed:823,cr_pct:13.35,dnf:297,oem_dupe:2085},
+  {channel:"GDN",model:"Zest",total:3113,failed:879,fail_pct:28.2,triggered:2232,trig_pct:71.7,retailed:237,cr_pct:10.62,dnf:146,oem_dupe:573},
+  {channel:"GDN",model:"iQube",total:24931,failed:9236,fail_pct:37.0,triggered:15563,trig_pct:62.4,retailed:1347,cr_pct:8.66,dnf:3856,oem_dupe:4191},
+  {channel:"Meta",model:"Apache",total:102101,failed:18401,fail_pct:18.0,triggered:83209,trig_pct:81.5,retailed:10400,cr_pct:12.5,dnf:1058,oem_dupe:12328},
+  {channel:"Meta",model:"Jupiter",total:92202,failed:21433,fail_pct:23.2,triggered:70568,trig_pct:76.5,retailed:6264,cr_pct:8.88,dnf:1808,oem_dupe:14025},
+  {channel:"Meta",model:"NTORQ",total:48112,failed:10143,fail_pct:21.1,triggered:37801,trig_pct:78.6,retailed:2802,cr_pct:7.41,dnf:719,oem_dupe:5832},
+  {channel:"Meta",model:"Orbiter",total:141,failed:124,fail_pct:87.9,triggered:0,trig_pct:0.0,retailed:0,cr_pct:0.0,dnf:123,oem_dupe:0},
+  {channel:"Meta",model:"Other",total:14,failed:14,fail_pct:100.0,triggered:0,trig_pct:0.0,retailed:0,cr_pct:0.0,dnf:14,oem_dupe:0},
+  {channel:"Meta",model:"Radeon",total:10784,failed:3076,fail_pct:28.5,triggered:7989,trig_pct:74.1,retailed:771,cr_pct:9.65,dnf:281,oem_dupe:2334},
+  {channel:"Meta",model:"Raider",total:82916,failed:18361,fail_pct:22.1,triggered:64291,trig_pct:77.5,retailed:6520,cr_pct:10.14,dnf:2061,oem_dupe:11129},
+  {channel:"Meta",model:"Ronin",total:1449,failed:3657,fail_pct:252.4,triggered:9230,trig_pct:637.0,retailed:858,cr_pct:9.3,dnf:416,oem_dupe:2810},
+  {channel:"Meta",model:"Sport",total:42672,failed:8341,fail_pct:19.5,triggered:34248,trig_pct:80.3,retailed:2574,cr_pct:7.52,dnf:431,oem_dupe:6155},
+  {channel:"Meta",model:"Star City",total:708,failed:684,fail_pct:96.6,triggered:16,trig_pct:2.3,retailed:1,cr_pct:6.25,dnf:613,oem_dupe:47},
+  {channel:"Meta",model:"XL100",total:29739,failed:6938,fail_pct:23.3,triggered:22770,trig_pct:76.6,retailed:1868,cr_pct:8.2,dnf:373,oem_dupe:4009},
+  {channel:"Meta",model:"Zest",total:395,failed:184,fail_pct:46.6,triggered:210,trig_pct:53.2,retailed:29,cr_pct:13.81,dnf:12,oem_dupe:152},
+  {channel:"Meta",model:"iQube",total:84924,failed:24147,fail_pct:28.4,triggered:60674,trig_pct:71.4,retailed:5066,cr_pct:8.35,dnf:6160,oem_dupe:13986},
+  {channel:"Organic",model:"Apache",total:76873,failed:33649,fail_pct:43.8,triggered:42200,trig_pct:54.9,retailed:5196,cr_pct:12.31,dnf:14675,oem_dupe:16558},
+  {channel:"Organic",model:"Jupiter",total:58752,failed:25306,fail_pct:43.1,triggered:32657,trig_pct:55.6,retailed:6043,cr_pct:18.5,dnf:5028,oem_dupe:16408},
+  {channel:"Organic",model:"NTORQ",total:39489,failed:18627,fail_pct:47.2,triggered:20297,trig_pct:51.4,retailed:2201,cr_pct:10.84,dnf:9610,oem_dupe:6980},
+  {channel:"Organic",model:"Orbiter",total:8728,failed:8528,fail_pct:97.7,triggered:0,trig_pct:0.0,retailed:0,cr_pct:0.0,dnf:8413,oem_dupe:0},
+  {channel:"Organic",model:"Other",total:1239,failed:1227,fail_pct:99.0,triggered:0,trig_pct:0.0,retailed:0,cr_pct:0.0,dnf:1211,oem_dupe:0},
+  {channel:"Organic",model:"Radeon",total:16245,failed:8787,fail_pct:54.1,triggered:7356,trig_pct:45.3,retailed:762,cr_pct:10.36,dnf:4540,oem_dupe:3165},
+  {channel:"Organic",model:"Raider",total:52397,failed:17316,fail_pct:33.0,triggered:34527,trig_pct:65.9,retailed:3814,cr_pct:11.05,dnf:2222,oem_dupe:12271},
+  {channel:"Organic",model:"Ronin",total:31035,failed:14650,fail_pct:47.2,triggered:15745,trig_pct:50.7,retailed:1717,cr_pct:10.91,dnf:7279,oem_dupe:5258},
+  {channel:"Organic",model:"Scooty",total:68,failed:54,fail_pct:79.4,triggered:0,trig_pct:0.0,retailed:0,cr_pct:0.0,dnf:49,oem_dupe:0},
+  {channel:"Organic",model:"Sport",total:17483,failed:6528,fail_pct:37.3,triggered:10742,trig_pct:61.4,retailed:1214,cr_pct:11.3,dnf:680,oem_dupe:4909},
+  {channel:"Organic",model:"Star City",total:11852,failed:10891,fail_pct:91.9,triggered:902,trig_pct:7.6,retailed:119,cr_pct:13.19,dnf:9848,oem_dupe:592},
+  {channel:"Organic",model:"Victor",total:1,failed:1,fail_pct:100.0,triggered:0,trig_pct:0.0,retailed:0,cr_pct:0.0,dnf:1,oem_dupe:0},
+  {channel:"Organic",model:"Wego",total:2,failed:1,fail_pct:50.0,triggered:0,trig_pct:0.0,retailed:0,cr_pct:0.0,dnf:1,oem_dupe:0},
+  {channel:"Organic",model:"XL100",total:12903,failed:4486,fail_pct:34.8,triggered:8251,trig_pct:63.9,retailed:1352,cr_pct:16.39,dnf:401,oem_dupe:3313},
+  {channel:"Organic",model:"Zest",total:3133,failed:1353,fail_pct:43.2,triggered:1779,trig_pct:56.8,retailed:279,cr_pct:15.68,dnf:223,oem_dupe:966},
+  {channel:"Organic",model:"iQube",total:40609,failed:18127,fail_pct:44.6,triggered:21920,trig_pct:54.0,retailed:2315,cr_pct:10.56,dnf:6531,oem_dupe:9437},
+];
+
+var UNIQUE_GEN_CHANNEL_MODEL_MONTH = [
+  {channel:"GDN",model:"Apache",month:"Dec'25",total:7485,failed:1975,fail_pct:26.4,trig:5502,ret:408,dnf:638,oem:1133},
+  {channel:"GDN",model:"Apache",month:"Feb'26",total:6004,failed:2177,fail_pct:36.3,trig:3798,ret:367,dnf:938,oem:925},
+  {channel:"GDN",model:"Apache",month:"Jan'26",total:6054,failed:2093,fail_pct:34.6,trig:3955,ret:302,dnf:981,oem:905},
+  {channel:"GDN",model:"Apache",month:"Mar'26",total:5620,failed:1757,fail_pct:31.3,trig:3722,ret:348,dnf:663,oem:961},
+  {channel:"GDN",model:"Apache",month:"Nov'25",total:4919,failed:2142,fail_pct:43.5,trig:2767,ret:296,dnf:993,oem:1017},
+  {channel:"GDN",model:"Jupiter",month:"Dec'25",total:11470,failed:3296,fail_pct:28.7,trig:8163,ret:865,dnf:622,oem:2243},
+  {channel:"GDN",model:"Jupiter",month:"Feb'26",total:6991,failed:2715,fail_pct:38.8,trig:4239,ret:612,dnf:485,oem:1560},
+  {channel:"GDN",model:"Jupiter",month:"Jan'26",total:7790,failed:2517,fail_pct:32.3,trig:5266,ret:651,dnf:391,oem:1619},
+  {channel:"GDN",model:"Jupiter",month:"Mar'26",total:6300,failed:2262,fail_pct:35.9,trig:3816,ret:510,dnf:397,oem:1338},
+  {channel:"GDN",model:"Jupiter",month:"Nov'25",total:11496,failed:3641,fail_pct:31.7,trig:7839,ret:970,dnf:828,oem:2397},
+  {channel:"GDN",model:"NTORQ",month:"Dec'25",total:3501,failed:1320,fail_pct:37.7,trig:2175,ret:208,dnf:561,oem:646},
+  {channel:"GDN",model:"NTORQ",month:"Feb'26",total:3270,failed:1175,fail_pct:35.9,trig:2077,ret:214,dnf:323,oem:609},
+  {channel:"GDN",model:"NTORQ",month:"Jan'26",total:3053,failed:1156,fail_pct:37.9,trig:1893,ret:215,dnf:390,oem:598},
+  {channel:"GDN",model:"NTORQ",month:"Mar'26",total:3064,failed:997,fail_pct:32.5,trig:1946,ret:155,dnf:369,oem:486},
+  {channel:"GDN",model:"NTORQ",month:"Nov'25",total:5587,failed:1980,fail_pct:35.4,trig:3599,ret:336,dnf:881,oem:955},
+  {channel:"GDN",model:"Orbiter",month:"Dec'25",total:439,failed:439,fail_pct:100.0,trig:0,ret:0,dnf:435,oem:0},
+  {channel:"GDN",model:"Orbiter",month:"Feb'26",total:341,failed:339,fail_pct:99.4,trig:0,ret:0,dnf:338,oem:0},
+  {channel:"GDN",model:"Orbiter",month:"Jan'26",total:210,failed:208,fail_pct:99.0,trig:0,ret:0,dnf:203,oem:0},
+  {channel:"GDN",model:"Orbiter",month:"Mar'26",total:926,failed:869,fail_pct:93.8,trig:0,ret:0,dnf:864,oem:0},
+  {channel:"GDN",model:"Orbiter",month:"Nov'25",total:308,failed:308,fail_pct:100.0,trig:0,ret:0,dnf:304,oem:0},
+  {channel:"GDN",model:"Other",month:"Dec'25",total:18,failed:18,fail_pct:100.0,trig:0,ret:0,dnf:18,oem:0},
+  {channel:"GDN",model:"Other",month:"Feb'26",total:21,failed:21,fail_pct:100.0,trig:0,ret:0,dnf:21,oem:0},
+  {channel:"GDN",model:"Other",month:"Jan'26",total:17,failed:17,fail_pct:100.0,trig:0,ret:0,dnf:17,oem:0},
+  {channel:"GDN",model:"Other",month:"Mar'26",total:35,failed:35,fail_pct:100.0,trig:0,ret:0,dnf:33,oem:0},
+  {channel:"GDN",model:"Other",month:"Nov'25",total:17,failed:17,fail_pct:100.0,trig:0,ret:0,dnf:17,oem:0},
+  {channel:"GDN",model:"Radeon",month:"Dec'25",total:1390,failed:457,fail_pct:32.9,trig:932,ret:77,dnf:98,oem:288},
+  {channel:"GDN",model:"Radeon",month:"Feb'26",total:1058,failed:450,fail_pct:42.5,trig:604,ret:68,dnf:162,oem:206},
+  {channel:"GDN",model:"Radeon",month:"Jan'26",total:1070,failed:410,fail_pct:38.3,trig:657,ret:57,dnf:82,oem:252},
+  {channel:"GDN",model:"Radeon",month:"Mar'26",total:1187,failed:586,fail_pct:49.4,trig:570,ret:60,dnf:269,oem:236},
+  {channel:"GDN",model:"Radeon",month:"Nov'25",total:1145,failed:536,fail_pct:46.8,trig:609,ret:64,dnf:281,oem:196},
+  {channel:"GDN",model:"Raider",month:"Dec'25",total:5392,failed:1582,fail_pct:29.3,trig:3802,ret:364,dnf:271,oem:1133},
+  {channel:"GDN",model:"Raider",month:"Feb'26",total:4642,failed:1480,fail_pct:31.9,trig:3146,ret:317,dnf:203,oem:901},
+  {channel:"GDN",model:"Raider",month:"Jan'26",total:4857,failed:1516,fail_pct:31.2,trig:3337,ret:319,dnf:235,oem:952},
+  {channel:"GDN",model:"Raider",month:"Mar'26",total:4788,failed:1285,fail_pct:26.8,trig:3377,ret:326,dnf:97,oem:916},
+  {channel:"GDN",model:"Raider",month:"Nov'25",total:6535,failed:1863,fail_pct:28.5,trig:4665,ret:443,dnf:349,oem:1296},
+  {channel:"GDN",model:"Ronin",month:"Dec'25",total:2995,failed:1205,fail_pct:40.2,trig:1788,ret:105,dnf:801,oem:307},
+  {channel:"GDN",model:"Ronin",month:"Feb'26",total:2398,failed:1017,fail_pct:42.4,trig:1367,ret:114,dnf:471,oem:296},
+  {channel:"GDN",model:"Ronin",month:"Jan'26",total:2758,failed:1171,fail_pct:42.5,trig:1583,ret:132,dnf:598,oem:355},
+  {channel:"GDN",model:"Ronin",month:"Mar'26",total:3074,failed:998,fail_pct:32.5,trig:2005,ret:146,dnf:425,oem:370},
+  {channel:"GDN",model:"Ronin",month:"Nov'25",total:3761,failed:1741,fail_pct:46.3,trig:2016,ret:163,dnf:1095,oem:522},
+  {channel:"GDN",model:"Sport",month:"Dec'25",total:2834,failed:933,fail_pct:32.9,trig:1894,ret:170,dnf:114,oem:724},
+  {channel:"GDN",model:"Sport",month:"Feb'26",total:1687,failed:615,fail_pct:36.5,trig:1066,ret:124,dnf:53,oem:422},
+  {channel:"GDN",model:"Sport",month:"Jan'26",total:1778,failed:614,fail_pct:34.5,trig:1161,ret:136,dnf:46,oem:469},
+  {channel:"GDN",model:"Sport",month:"Mar'26",total:1470,failed:439,fail_pct:29.9,trig:962,ret:106,dnf:21,oem:328},
+  {channel:"GDN",model:"Sport",month:"Nov'25",total:2944,failed:939,fail_pct:31.9,trig:2001,ret:192,dnf:115,oem:723},
+  {channel:"GDN",model:"Star City",month:"Dec'25",total:577,failed:368,fail_pct:63.8,trig:209,ret:23,dnf:259,oem:84},
+  {channel:"GDN",model:"Star City",month:"Feb'26",total:313,failed:309,fail_pct:98.7,trig:1,ret:0,dnf:299,oem:0},
+  {channel:"GDN",model:"Star City",month:"Jan'26",total:415,failed:233,fail_pct:56.1,trig:182,ret:14,dnf:130,oem:74},
+  {channel:"GDN",model:"Star City",month:"Mar'26",total:355,failed:347,fail_pct:97.7,trig:0,ret:0,dnf:342,oem:0},
+  {channel:"GDN",model:"Star City",month:"Nov'25",total:1399,failed:1135,fail_pct:81.1,trig:264,ret:34,dnf:1010,oem:91},
+  {channel:"GDN",model:"XL100",month:"Dec'25",total:1930,failed:610,fail_pct:31.6,trig:1319,ret:189,dnf:86,oem:463},
+  {channel:"GDN",model:"XL100",month:"Feb'26",total:1505,failed:512,fail_pct:34.0,trig:987,ret:124,dnf:53,oem:332},
+  {channel:"GDN",model:"XL100",month:"Jan'26",total:1771,failed:549,fail_pct:31.0,trig:1219,ret:160,dnf:51,oem:407},
+  {channel:"GDN",model:"XL100",month:"Mar'26",total:1183,failed:366,fail_pct:30.9,trig:745,ret:111,dnf:29,oem:262},
+  {channel:"GDN",model:"XL100",month:"Nov'25",total:2677,failed:778,fail_pct:29.1,trig:1894,ret:239,dnf:78,oem:621},
+  {channel:"GDN",model:"Zest",month:"Dec'25",total:526,failed:149,fail_pct:28.3,trig:375,ret:45,dnf:29,oem:106},
+  {channel:"GDN",model:"Zest",month:"Feb'26",total:520,failed:164,fail_pct:31.5,trig:356,ret:42,dnf:22,oem:90},
+  {channel:"GDN",model:"Zest",month:"Jan'26",total:787,failed:237,fail_pct:30.1,trig:550,ret:56,dnf:34,oem:159},
+  {channel:"GDN",model:"Zest",month:"Mar'26",total:341,failed:104,fail_pct:30.5,trig:237,ret:24,dnf:14,oem:65},
+  {channel:"GDN",model:"Zest",month:"Nov'25",total:939,failed:225,fail_pct:24.0,trig:714,ret:70,dnf:47,oem:153},
+  {channel:"GDN",model:"iQube",month:"Dec'25",total:5246,failed:1924,fail_pct:36.7,trig:3319,ret:277,dnf:897,oem:925},
+  {channel:"GDN",model:"iQube",month:"Feb'26",total:4534,failed:1744,fail_pct:38.5,trig:2776,ret:260,dnf:655,oem:752},
+  {channel:"GDN",model:"iQube",month:"Jan'26",total:3779,failed:1434,fail_pct:37.9,trig:2342,ret:230,dnf:580,oem:610},
+  {channel:"GDN",model:"iQube",month:"Mar'26",total:4980,failed:1720,fail_pct:34.5,trig:3153,ret:261,dnf:573,oem:778},
+  {channel:"GDN",model:"iQube",month:"Nov'25",total:6392,failed:2414,fail_pct:37.8,trig:3973,ret:319,dnf:1151,oem:1126},
+  {channel:"Meta",model:"Apache",month:"Dec'25",total:17256,failed:2728,fail_pct:15.8,trig:14524,ret:1668,dnf:207,oem:2307},
+  {channel:"Meta",model:"Apache",month:"Feb'26",total:22501,failed:4713,fail_pct:20.9,trig:17725,ret:2508,dnf:164,oem:2516},
+  {channel:"Meta",model:"Apache",month:"Jan'26",total:20479,failed:3777,fail_pct:18.4,trig:16684,ret:2086,dnf:126,oem:2573},
+  {channel:"Meta",model:"Apache",month:"Mar'26",total:23362,failed:4006,fail_pct:17.1,trig:18971,ret:2457,dnf:222,oem:2391},
+  {channel:"Meta",model:"Apache",month:"Nov'25",total:18503,failed:3177,fail_pct:17.2,trig:15305,ret:1681,dnf:339,oem:2541},
+  {channel:"Meta",model:"Jupiter",month:"Dec'25",total:15981,failed:3605,fail_pct:22.6,trig:12365,ret:1090,dnf:403,oem:2568},
+  {channel:"Meta",model:"Jupiter",month:"Feb'26",total:19026,failed:4901,fail_pct:25.8,trig:14110,ret:1370,dnf:286,oem:2978},
+  {channel:"Meta",model:"Jupiter",month:"Jan'26",total:16664,failed:4019,fail_pct:24.1,trig:12638,ret:1213,dnf:270,oem:2734},
+  {channel:"Meta",model:"Jupiter",month:"Mar'26",total:21552,failed:4715,fail_pct:21.9,trig:16684,ret:1340,dnf:426,oem:2843},
+  {channel:"Meta",model:"Jupiter",month:"Nov'25",total:18979,failed:4193,fail_pct:22.1,trig:14771,ret:1251,dnf:423,oem:2902},
+  {channel:"Meta",model:"NTORQ",month:"Dec'25",total:8637,failed:1475,fail_pct:17.1,trig:7157,ret:524,dnf:193,oem:1148},
+  {channel:"Meta",model:"NTORQ",month:"Feb'26",total:10417,failed:2705,fail_pct:26.0,trig:7689,ret:628,dnf:105,oem:1226},
+  {channel:"Meta",model:"NTORQ",month:"Jan'26",total:9727,failed:2086,fail_pct:21.4,trig:7635,ret:608,dnf:101,oem:1131},
+  {channel:"Meta",model:"NTORQ",month:"Mar'26",total:8577,failed:2148,fail_pct:25.0,trig:6302,ret:493,dnf:98,oem:1001},
+  {channel:"Meta",model:"NTORQ",month:"Nov'25",total:10754,failed:1729,fail_pct:16.1,trig:9018,ret:549,dnf:222,oem:1326},
+  {channel:"Meta",model:"Orbiter",month:"Dec'25",total:30,failed:29,fail_pct:96.7,trig:0,ret:0,dnf:29,oem:0},
+  {channel:"Meta",model:"Orbiter",month:"Feb'26",total:18,failed:13,fail_pct:72.2,trig:0,ret:0,dnf:13,oem:0},
+  {channel:"Meta",model:"Orbiter",month:"Jan'26",total:20,failed:20,fail_pct:100.0,trig:0,ret:0,dnf:20,oem:0},
+  {channel:"Meta",model:"Orbiter",month:"Mar'26",total:43,failed:33,fail_pct:76.7,trig:0,ret:0,dnf:33,oem:0},
+  {channel:"Meta",model:"Orbiter",month:"Nov'25",total:30,failed:29,fail_pct:96.7,trig:0,ret:0,dnf:28,oem:0},
+  {channel:"Meta",model:"Other",month:"Dec'25",total:3,failed:3,fail_pct:100.0,trig:0,ret:0,dnf:3,oem:0},
+  {channel:"Meta",model:"Other",month:"Feb'26",total:3,failed:3,fail_pct:100.0,trig:0,ret:0,dnf:3,oem:0},
+  {channel:"Meta",model:"Other",month:"Jan'26",total:2,failed:2,fail_pct:100.0,trig:0,ret:0,dnf:2,oem:0},
+  {channel:"Meta",model:"Other",month:"Mar'26",total:2,failed:2,fail_pct:100.0,trig:0,ret:0,dnf:2,oem:0},
+  {channel:"Meta",model:"Other",month:"Nov'25",total:4,failed:4,fail_pct:100.0,trig:0,ret:0,dnf:4,oem:0},
+  {channel:"Meta",model:"Radeon",month:"Dec'25",total:1927,failed:546,fail_pct:28.3,trig:1380,ret:126,dnf:50,oem:465},
+  {channel:"Meta",model:"Radeon",month:"Feb'26",total:1714,failed:553,fail_pct:32.3,trig:1244,ret:137,dnf:20,oem:393},
+  {channel:"Meta",model:"Radeon",month:"Jan'26",total:2389,failed:768,fail_pct:32.1,trig:1837,ret:167,dnf:41,oem:588},
+  {channel:"Meta",model:"Radeon",month:"Mar'26",total:1922,failed:597,fail_pct:31.1,trig:1308,ret:156,dnf:27,oem:469},
+  {channel:"Meta",model:"Radeon",month:"Nov'25",total:2832,failed:612,fail_pct:21.6,trig:2220,ret:185,dnf:143,oem:419},
+  {channel:"Meta",model:"Raider",month:"Dec'25",total:13474,failed:2684,fail_pct:19.9,trig:10781,ret:1093,dnf:442,oem:2002},
+  {channel:"Meta",model:"Raider",month:"Feb'26",total:18020,failed:4544,fail_pct:25.2,trig:13451,ret:1426,dnf:378,oem:2319},
+  {channel:"Meta",model:"Raider",month:"Jan'26",total:15289,failed:3514,fail_pct:23.0,trig:11763,ret:1202,dnf:332,oem:2265},
+  {channel:"Meta",model:"Raider",month:"Mar'26",total:18994,failed:4402,fail_pct:23.2,trig:14380,ret:1506,dnf:450,oem:2117},
+  {channel:"Meta",model:"Raider",month:"Nov'25",total:17139,failed:3217,fail_pct:18.8,trig:13916,ret:1293,dnf:459,oem:2426},
+  {channel:"Meta",model:"Ronin",month:"Dec'25",total:195,failed:119,fail_pct:61.0,trig:75,ret:12,dnf:57,oem:49},
+  {channel:"Meta",model:"Ronin",month:"Feb'26",total:397,failed:1506,fail_pct:379.3,trig:4100,ret:407,dnf:124,oem:1159},
+  {channel:"Meta",model:"Ronin",month:"Jan'26",total:295,failed:958,fail_pct:324.7,trig:1997,ret:182,dnf:77,oem:764},
+  {channel:"Meta",model:"Ronin",month:"Mar'26",total:289,failed:886,fail_pct:306.6,trig:2975,ret:246,dnf:95,oem:725},
+  {channel:"Meta",model:"Ronin",month:"Nov'25",total:273,failed:188,fail_pct:68.9,trig:83,ret:11,dnf:63,oem:113},
+  {channel:"Meta",model:"Sport",month:"Dec'25",total:9518,failed:1728,fail_pct:18.2,trig:7787,ret:548,dnf:180,oem:1367},
+  {channel:"Meta",model:"Sport",month:"Feb'26",total:7432,failed:1660,fail_pct:22.3,trig:5758,ret:494,dnf:18,oem:1121},
+  {channel:"Meta",model:"Sport",month:"Jan'26",total:10177,failed:2073,fail_pct:20.4,trig:8100,ret:574,dnf:111,oem:1372},
+  {channel:"Meta",model:"Sport",month:"Mar'26",total:6486,failed:1287,fail_pct:19.8,trig:5141,ret:441,dnf:17,oem:990},
+  {channel:"Meta",model:"Sport",month:"Nov'25",total:9059,failed:1593,fail_pct:17.6,trig:7462,ret:517,dnf:105,oem:1305},
+  {channel:"Meta",model:"Star City",month:"Dec'25",total:114,failed:109,fail_pct:95.6,trig:5,ret:0,dnf:81,oem:16},
+  {channel:"Meta",model:"Star City",month:"Feb'26",total:58,failed:58,fail_pct:100.0,trig:0,ret:0,dnf:54,oem:2},
+  {channel:"Meta",model:"Star City",month:"Jan'26",total:64,failed:55,fail_pct:85.9,trig:8,ret:1,dnf:42,oem:11},
+  {channel:"Meta",model:"Star City",month:"Mar'26",total:27,failed:20,fail_pct:74.1,trig:0,ret:0,dnf:20,oem:0},
+  {channel:"Meta",model:"Star City",month:"Nov'25",total:445,failed:442,fail_pct:99.3,trig:3,ret:0,dnf:416,oem:18},
+  {channel:"Meta",model:"XL100",month:"Dec'25",total:4727,failed:913,fail_pct:19.3,trig:3814,ret:297,dnf:101,oem:723},
+  {channel:"Meta",model:"XL100",month:"Feb'26",total:7113,failed:1992,fail_pct:28.0,trig:5116,ret:458,dnf:56,oem:901},
+  {channel:"Meta",model:"XL100",month:"Jan'26",total:5921,failed:1406,fail_pct:23.7,trig:4514,ret:398,dnf:61,oem:902},
+  {channel:"Meta",model:"XL100",month:"Mar'26",total:5801,failed:1627,fail_pct:28.0,trig:4152,ret:291,dnf:74,oem:688},
+  {channel:"Meta",model:"XL100",month:"Nov'25",total:6177,failed:1000,fail_pct:16.2,trig:5174,ret:424,dnf:81,oem:795},
+  {channel:"Meta",model:"Zest",month:"Dec'25",total:6,failed:1,fail_pct:16.7,trig:5,ret:1,dnf:0,oem:1},
+  {channel:"Meta",model:"Zest",month:"Feb'26",total:135,failed:51,fail_pct:37.8,trig:84,ret:12,dnf:0,oem:45},
+  {channel:"Meta",model:"Zest",month:"Jan'26",total:10,failed:6,fail_pct:60.0,trig:4,ret:0,dnf:0,oem:4},
+  {channel:"Meta",model:"Zest",month:"Mar'26",total:223,failed:108,fail_pct:48.4,trig:114,ret:15,dnf:2,oem:95},
+  {channel:"Meta",model:"Zest",month:"Nov'25",total:21,failed:18,fail_pct:85.7,trig:3,ret:1,dnf:10,oem:7},
+  {channel:"Meta",model:"iQube",month:"Dec'25",total:13914,failed:3597,fail_pct:25.9,trig:10317,ret:839,dnf:1157,oem:2172},
+  {channel:"Meta",model:"iQube",month:"Feb'26",total:17304,failed:5199,fail_pct:30.0,trig:12096,ret:1104,dnf:1118,oem:2724},
+  {channel:"Meta",model:"iQube",month:"Jan'26",total:14856,failed:4455,fail_pct:30.0,trig:10399,ret:913,dnf:1040,oem:2595},
+  {channel:"Meta",model:"iQube",month:"Mar'26",total:19132,failed:5876,fail_pct:30.7,trig:13174,ret:1123,dnf:1334,oem:3371},
+  {channel:"Meta",model:"iQube",month:"Nov'25",total:19718,failed:5020,fail_pct:25.5,trig:14688,ret:1087,dnf:1511,oem:3124},
+  {channel:"Organic",model:"Apache",month:"Dec'25",total:16086,failed:6862,fail_pct:42.7,trig:9180,ret:1083,dnf:2723,oem:3714},
+  {channel:"Organic",model:"Apache",month:"Feb'26",total:14237,failed:6335,fail_pct:44.5,trig:7756,ret:1018,dnf:2747,oem:2949},
+  {channel:"Organic",model:"Apache",month:"Jan'26",total:16661,failed:7159,fail_pct:43.0,trig:9464,ret:1170,dnf:2755,oem:3867},
+  {channel:"Organic",model:"Apache",month:"Mar'26",total:15536,failed:6166,fail_pct:39.7,trig:8604,ret:998,dnf:2889,oem:2922},
+  {channel:"Organic",model:"Apache",month:"Nov'25",total:14353,failed:7127,fail_pct:49.7,trig:7196,ret:927,dnf:3561,oem:3106},
+  {channel:"Organic",model:"Jupiter",month:"Dec'25",total:15446,failed:5668,fail_pct:36.7,trig:9749,ret:1564,dnf:756,oem:4247},
+  {channel:"Organic",model:"Jupiter",month:"Feb'26",total:8335,failed:4200,fail_pct:50.4,trig:4014,ret:919,dnf:859,oem:2605},
+  {channel:"Organic",model:"Jupiter",month:"Jan'26",total:10671,failed:4553,fail_pct:42.7,trig:6101,ret:1180,dnf:649,oem:3161},
+  {channel:"Organic",model:"Jupiter",month:"Mar'26",total:10939,failed:4845,fail_pct:44.3,trig:5503,ret:1025,dnf:811,oem:2809},
+  {channel:"Organic",model:"Jupiter",month:"Nov'25",total:13361,failed:6040,fail_pct:45.2,trig:7290,ret:1355,dnf:1953,oem:3586},
+  {channel:"Organic",model:"NTORQ",month:"Dec'25",total:4769,failed:2863,fail_pct:60.0,trig:1883,ret:285,dnf:1608,oem:1068},
+  {channel:"Organic",model:"NTORQ",month:"Feb'26",total:9785,failed:3972,fail_pct:40.6,trig:5735,ret:586,dnf:1580,oem:1677},
+  {channel:"Organic",model:"NTORQ",month:"Jan'26",total:7779,failed:3586,fail_pct:46.1,trig:4170,ret:459,dnf:1773,oem:1415},
+  {channel:"Organic",model:"NTORQ",month:"Mar'26",total:10588,failed:3947,fail_pct:37.3,trig:6219,ret:555,dnf:1796,oem:1618},
+  {channel:"Organic",model:"NTORQ",month:"Nov'25",total:6568,failed:4259,fail_pct:64.8,trig:2290,ret:316,dnf:2853,oem:1202},
+  {channel:"Organic",model:"Orbiter",month:"Dec'25",total:1441,failed:1436,fail_pct:99.7,trig:0,ret:0,dnf:1422,oem:0},
+  {channel:"Organic",model:"Orbiter",month:"Feb'26",total:1106,failed:1084,fail_pct:98.0,trig:0,ret:0,dnf:1064,oem:0},
+  {channel:"Organic",model:"Orbiter",month:"Jan'26",total:1204,failed:1196,fail_pct:99.3,trig:0,ret:0,dnf:1174,oem:0},
+  {channel:"Organic",model:"Orbiter",month:"Mar'26",total:3718,failed:3555,fail_pct:95.6,trig:0,ret:0,dnf:3520,oem:0},
+  {channel:"Organic",model:"Orbiter",month:"Nov'25",total:1259,failed:1257,fail_pct:99.8,trig:0,ret:0,dnf:1233,oem:0},
+  {channel:"Organic",model:"Other",month:"Dec'25",total:232,failed:230,fail_pct:99.1,trig:0,ret:0,dnf:221,oem:0},
+  {channel:"Organic",model:"Other",month:"Feb'26",total:193,failed:192,fail_pct:99.5,trig:0,ret:0,dnf:191,oem:0},
+  {channel:"Organic",model:"Other",month:"Jan'26",total:219,failed:219,fail_pct:100.0,trig:0,ret:0,dnf:216,oem:0},
+  {channel:"Organic",model:"Other",month:"Mar'26",total:279,failed:270,fail_pct:96.8,trig:0,ret:0,dnf:268,oem:0},
+  {channel:"Organic",model:"Other",month:"Nov'25",total:316,failed:316,fail_pct:100.0,trig:0,ret:0,dnf:315,oem:0},
+  {channel:"Organic",model:"Radeon",month:"Dec'25",total:3309,failed:1524,fail_pct:46.1,trig:1782,ret:181,dnf:635,oem:683},
+  {channel:"Organic",model:"Radeon",month:"Feb'26",total:3220,failed:1568,fail_pct:48.7,trig:1637,ret:150,dnf:591,oem:671},
+  {channel:"Organic",model:"Radeon",month:"Jan'26",total:3270,failed:1386,fail_pct:42.4,trig:1876,ret:194,dnf:424,oem:724},
+  {channel:"Organic",model:"Radeon",month:"Mar'26",total:3761,failed:2130,fail_pct:56.6,trig:1559,ret:159,dnf:1084,oem:787},
+  {channel:"Organic",model:"Radeon",month:"Nov'25",total:2685,failed:2179,fail_pct:81.2,trig:502,ret:78,dnf:1806,oem:300},
+  {channel:"Organic",model:"Raider",month:"Dec'25",total:10941,failed:3610,fail_pct:33.0,trig:7303,ret:796,dnf:515,oem:2664},
+  {channel:"Organic",model:"Raider",month:"Feb'26",total:10131,failed:3545,fail_pct:35.0,trig:6505,ret:733,dnf:392,oem:2315},
+  {channel:"Organic",model:"Raider",month:"Jan'26",total:10315,failed:3573,fail_pct:34.6,trig:6733,ret:762,dnf:369,oem:2541},
+  {channel:"Organic",model:"Raider",month:"Mar'26",total:11551,failed:3164,fail_pct:27.4,trig:7971,ret:815,dnf:262,oem:2301},
+  {channel:"Organic",model:"Raider",month:"Nov'25",total:9459,failed:3424,fail_pct:36.2,trig:6015,ret:708,dnf:684,oem:2450},
+  {channel:"Organic",model:"Ronin",month:"Dec'25",total:6573,failed:3076,fail_pct:46.8,trig:3475,ret:370,dnf:1685,oem:1105},
+  {channel:"Organic",model:"Ronin",month:"Feb'26",total:5834,failed:2943,fail_pct:50.4,trig:2799,ret:341,dnf:1372,oem:966},
+  {channel:"Organic",model:"Ronin",month:"Jan'26",total:6114,failed:2941,fail_pct:48.1,trig:3152,ret:348,dnf:1370,oem:1034},
+  {channel:"Organic",model:"Ronin",month:"Mar'26",total:6699,failed:2668,fail_pct:39.8,trig:3543,ret:367,dnf:1176,oem:1036},
+  {channel:"Organic",model:"Ronin",month:"Nov'25",total:5815,failed:3022,fail_pct:52.0,trig:2776,ret:291,dnf:1676,oem:1117},
+  {channel:"Organic",model:"Scooty",month:"Dec'25",total:10,failed:10,fail_pct:100.0,trig:0,ret:0,dnf:9,oem:0},
+  {channel:"Organic",model:"Scooty",month:"Feb'26",total:5,failed:5,fail_pct:100.0,trig:0,ret:0,dnf:5,oem:0},
+  {channel:"Organic",model:"Scooty",month:"Jan'26",total:15,failed:15,fail_pct:100.0,trig:0,ret:0,dnf:13,oem:0},
+  {channel:"Organic",model:"Scooty",month:"Mar'26",total:15,failed:2,fail_pct:13.3,trig:0,ret:0,dnf:0,oem:0},
+  {channel:"Organic",model:"Scooty",month:"Nov'25",total:23,failed:22,fail_pct:95.7,trig:0,ret:0,dnf:22,oem:0},
+  {channel:"Organic",model:"Sport",month:"Dec'25",total:4003,failed:1457,fail_pct:36.4,trig:2542,ret:279,dnf:135,oem:1170},
+  {channel:"Organic",model:"Sport",month:"Feb'26",total:3115,failed:1195,fail_pct:38.4,trig:1887,ret:223,dnf:97,oem:835},
+  {channel:"Organic",model:"Sport",month:"Jan'26",total:3674,failed:1351,fail_pct:36.8,trig:2320,ret:242,dnf:117,oem:1017},
+  {channel:"Organic",model:"Sport",month:"Mar'26",total:3397,failed:1147,fail_pct:33.8,trig:2080,ret:234,dnf:91,oem:863},
+  {channel:"Organic",model:"Sport",month:"Nov'25",total:3294,failed:1378,fail_pct:41.8,trig:1913,ret:236,dnf:240,oem:1024},
+  {channel:"Organic",model:"Star City",month:"Dec'25",total:1871,failed:1560,fail_pct:83.4,trig:310,ret:35,dnf:1244,oem:204},
+  {channel:"Organic",model:"Star City",month:"Feb'26",total:1739,failed:1711,fail_pct:98.4,trig:13,ret:2,dnf:1631,oem:3},
+  {channel:"Organic",model:"Star City",month:"Jan'26",total:1674,failed:1404,fail_pct:83.9,trig:267,ret:38,dnf:1101,oem:182},
+  {channel:"Organic",model:"Star City",month:"Mar'26",total:1414,failed:1364,fail_pct:96.5,trig:13,ret:2,dnf:1325,oem:5},
+  {channel:"Organic",model:"Star City",month:"Nov'25",total:5154,failed:4852,fail_pct:94.1,trig:299,ret:42,dnf:4547,oem:198},
+  {channel:"Organic",model:"Victor",month:"Feb'26",total:1,failed:1,fail_pct:100.0,trig:0,ret:0,dnf:1,oem:0},
+  {channel:"Organic",model:"Wego",month:"Mar'26",total:1,failed:0,fail_pct:0.0,trig:0,ret:0,dnf:0,oem:0},
+  {channel:"Organic",model:"Wego",month:"Nov'25",total:1,failed:1,fail_pct:100.0,trig:0,ret:0,dnf:1,oem:0},
+  {channel:"Organic",model:"XL100",month:"Dec'25",total:2762,failed:971,fail_pct:35.2,trig:1783,ret:296,dnf:82,oem:791},
+  {channel:"Organic",model:"XL100",month:"Feb'26",total:2263,failed:853,fail_pct:37.7,trig:1391,ret:235,dnf:67,oem:566},
+  {channel:"Organic",model:"XL100",month:"Jan'26",total:2619,failed:997,fail_pct:38.1,trig:1615,ret:297,dnf:87,oem:695},
+  {channel:"Organic",model:"XL100",month:"Mar'26",total:2294,failed:690,fail_pct:30.1,trig:1477,ret:226,dnf:52,oem:468},
+  {channel:"Organic",model:"XL100",month:"Nov'25",total:2965,failed:975,fail_pct:32.9,trig:1985,ret:298,dnf:113,oem:793},
+  {channel:"Organic",model:"Zest",month:"Dec'25",total:659,failed:267,fail_pct:40.5,trig:392,ret:80,dnf:23,oem:217},
+  {channel:"Organic",model:"Zest",month:"Feb'26",total:527,failed:233,fail_pct:44.2,trig:294,ret:41,dnf:22,oem:161},
+  {channel:"Organic",model:"Zest",month:"Jan'26",total:667,failed:271,fail_pct:40.6,trig:396,ret:61,dnf:14,oem:220},
+  {channel:"Organic",model:"Zest",month:"Mar'26",total:491,failed:201,fail_pct:40.9,trig:289,ret:39,dnf:11,oem:160},
+  {channel:"Organic",model:"Zest",month:"Nov'25",total:789,failed:381,fail_pct:48.3,trig:408,ret:58,dnf:153,oem:208},
+  {channel:"Organic",model:"iQube",month:"Dec'25",total:8185,failed:3731,fail_pct:45.6,trig:4438,ret:470,dnf:1442,oem:2070},
+  {channel:"Organic",model:"iQube",month:"Feb'26",total:6267,failed:2919,fail_pct:46.6,trig:3288,ret:387,dnf:933,oem:1445},
+  {channel:"Organic",model:"iQube",month:"Jan'26",total:6698,failed:3218,fail_pct:48.0,trig:3468,ret:425,dnf:1101,oem:1659},
+  {channel:"Organic",model:"iQube",month:"Mar'26",total:11406,failed:4629,fail_pct:40.6,trig:6318,ret:565,dnf:1534,oem:2332},
+  {channel:"Organic",model:"iQube",month:"Nov'25",total:8053,failed:3630,fail_pct:45.1,trig:4408,ret:468,dnf:1521,oem:1931},
+];
 
 function buildModelTable(channelKey, modelFilter, monthFilter) {
   var channelMap = { meta:'Meta', gdn:'GDN', organic:'Organic' };
@@ -1899,7 +2376,6 @@ function buildModelTable(channelKey, modelFilter, monthFilter) {
   if (!tbody) return;
   tbody.innerHTML = '';
 
-  // Get unique models for this channel from CMM, filtered
   var cmmRows = CMM.filter(function(r) {
     return r.ch === channel &&
       (!modelFilter || !modelFilter.length || modelFilter.includes(r.m)) &&
@@ -1908,25 +2384,31 @@ function buildModelTable(channelKey, modelFilter, monthFilter) {
   var models = [];
   cmmRows.forEach(function(r) { if (!models.includes(r.m)) models.push(r.m); });
 
-  // Sort by retailed desc
   var modelTotals = models.map(function(model) {
     var mrs = cmmRows.filter(function(r) { return r.m === model; });
-    var gen=0,fail=0,trig=0,ret=0,oemd=0,dnfv=0;
-    mrs.forEach(function(r) { gen+=r.gen; fail+=r.fail; trig+=r.trig; ret+=r.ret; });
-    return { model:model, gen:gen, fail:fail, trig:trig, ret:ret };
+    var gen=0,fail=0,trig=0,ret=0,dnf=0,oem=0;
+    mrs.forEach(function(r) {
+      gen+=r.gen; fail+=r.fail; trig+=r.trig; ret+=r.ret;
+      dnf+=Math.round(r.gen*r.dnf_pct/100);
+      oem+=Math.round(r.gen*r.oem_pct/100);
+    });
+    return { model:model, gen:gen, fail:fail, trig:trig, ret:ret, dnf:dnf, oem:oem };
   });
   modelTotals.sort(function(a,b) { return b.ret - a.ret; });
 
   modelTotals.forEach(function(d) {
-    var fp = d.gen>0?d.fail/d.gen*100:0;
-    var tp = d.gen>0?d.trig/d.gen*100:0;
-    var cr = d.trig>0?d.ret/d.trig*100:0;
-    var ltr = d.gen>0?d.ret/d.gen*100:0;
-
-    // Get oem/dnf from first available CMM row for this model (avg)
-    var mrs2 = cmmRows.filter(function(r) { return r.m === d.model; });
-    var oempct = mrs2.length ? (mrs2.reduce(function(s,r){return s+r.oem_pct;},0)/mrs2.length) : 0;
-    var dnfpct = mrs2.length ? (mrs2.reduce(function(s,r){return s+r.dnf_pct;},0)/mrs2.length) : 0;
+    var fp  = d.gen>0  ? d.fail/d.gen*100  : 0;
+    var tp  = d.gen>0  ? d.trig/d.gen*100  : 0;
+    var cr  = d.trig>0 ? d.ret/d.trig*100  : 0;
+    var api = d.fail + d.trig;
+    var dnfpct = d.gen>0 ? d.dnf/d.gen*100 : 0;
+    var oempct = d.gen>0 ? d.oem/d.gen*100 : 0;
+    var ugm  = typeof UNIQUE_GEN_CHANNEL_MODEL !== 'undefined' ? UNIQUE_GEN_CHANNEL_MODEL.find(function(u){return u.channel===channel && u.model===d.model;}) : null;
+    var ugen  = ugm ? ugm.total   : 0;
+    var ufail = ugm ? ugm.failed  : 0;
+    var ufp   = ugen>0 ? ufail/ugen*100 : 0;
+    var udnf  = ugm ? ugm.dnf     : 0;
+    var uoem  = ugm ? ugm.oem_dupe: 0;
 
     var safeId = d.model.replace(/[^a-zA-Z0-9]/g,'');
     var tr = document.createElement('tr');
@@ -1935,22 +2417,23 @@ function buildModelTable(channelKey, modelFilter, monthFilter) {
     tr.innerHTML =
       '<td style="padding-left:0">'+d.model+' <span style="font-size:10px;color:var(--amber)">\u25b8</span></td>'+
       '<td>'+fmt(d.gen)+'</td>'+
-      '<td style="'+colFail(fp)+'">'+fp.toFixed(1)+'%</td>'+
-      '<td style="'+colTrig(tp)+'">'+tp.toFixed(1)+'%</td>'+
+      '<td style="'+colTrig(tp)+'">'+fmt(d.trig)+'<br><span style="font-size:10px;color:var(--text-3)">'+tp.toFixed(1)+'%</span></td>'+
+      '<td style="'+colFail(fp)+'">'+fmt(d.fail)+'<br><span style="font-size:10px;color:var(--text-3)">'+fp.toFixed(1)+'%</span></td>'+
+      '<td>'+fmt(api)+'</td>'+
       '<td>'+fmt(d.ret)+'</td>'+
       '<td>'+(cr?cr.toFixed(2)+'%':'—')+'</td>'+
-      '<td>'+ltr.toFixed(2)+'%</td>'+
-      '<td style="'+colOem(oempct)+'">'+oempct.toFixed(1)+'%</td>'+
-      '<td style="'+colDnf(dnfpct)+'">'+dnfpct.toFixed(1)+'%</td>';
+      '<td>'+(ugen?fmt(ugen):'—')+'</td>'+
+      '<td style="'+colFail(ufp)+'">'+(ugen?fmt(ufail)+'<br><span style="font-size:10px;color:var(--text-3)">'+ufp.toFixed(1)+'%</span>':'—')+'</td>'+
+      '<td style="'+colDnf(dnfpct)+'">'+fmt(d.dnf)+'<br><span style="font-size:10px;color:var(--amber)">'+(udnf?fmt(udnf):'—')+'</span></td>'+
+      '<td style="'+colOem(oempct)+'">'+fmt(d.oem)+'<br><span style="font-size:10px;color:var(--amber)">'+(uoem?fmt(uoem):'—')+'</span></td>';
 
     tbody.appendChild(tr);
 
-    // Month expand row
     var monthTr = document.createElement('tr');
     monthTr.id = 'ch-month-'+channelKey+'-'+safeId;
     monthTr.style.display = 'none';
     var monthTd = document.createElement('td');
-    monthTd.colSpan = 9;
+    monthTd.colSpan = 11;
     monthTd.style.cssText = 'padding:0 0 0 16px;background:var(--bg-2);';
     monthTd.innerHTML = buildMonthTableT1(channel, d.model, modelFilter, monthFilter);
     monthTr.appendChild(monthTd);
@@ -1969,28 +2452,33 @@ function buildModelTable(channelKey, modelFilter, monthFilter) {
 
   // Total row
   var tot = modelTotals.reduce(function(acc,r) {
-    return { gen:acc.gen+r.gen, fail:acc.fail+r.fail, trig:acc.trig+r.trig, ret:acc.ret+r.ret };
-  }, {gen:0,fail:0,trig:0,ret:0});
-  // Compute avg oem/dnf for total from CMM
-  var allCmmForChannel = CMM.filter(function(r) {
-    return r.ch === channelMap[channelKey] &&
-      (!modelFilter || !modelFilter.length || modelFilter.includes(r.m)) &&
-      (!monthFilter || !monthFilter.length || monthFilter.includes(r.mo));
-  });
-  var totOem = allCmmForChannel.length ? allCmmForChannel.reduce(function(s,r){return s+r.oem_pct;},0)/allCmmForChannel.length : 0;
-  var totDnf = allCmmForChannel.length ? allCmmForChannel.reduce(function(s,r){return s+r.dnf_pct;},0)/allCmmForChannel.length : 0;
+    return { gen:acc.gen+r.gen, fail:acc.fail+r.fail, trig:acc.trig+r.trig, ret:acc.ret+r.ret, dnf:acc.dnf+r.dnf, oem:acc.oem+r.oem };
+  }, {gen:0,fail:0,trig:0,ret:0,dnf:0,oem:0});
+  var tApi=tot.fail+tot.trig, tfp=tot.gen>0?tot.fail/tot.gen*100:0, ttp=tot.gen>0?tot.trig/tot.gen*100:0;
+  var tcr=tot.trig>0?tot.ret/tot.trig*100:0;
+  var tdnfpct=tot.gen>0?tot.dnf/tot.gen*100:0, toempct=tot.gen>0?tot.oem/tot.gen*100:0;
+  var tugT=0,tufT=0,tudnfT=0,tuoemT=0;
+  if (typeof UNIQUE_GEN_CHANNEL_MODEL !== 'undefined') {
+    models.forEach(function(m) {
+      var ugm = UNIQUE_GEN_CHANNEL_MODEL.find(function(u){return u.channel===channel && u.model===m;});
+      if (ugm) { tugT+=ugm.total; tufT+=ugm.failed; tudnfT+=ugm.dnf; tuoemT+=ugm.oem_dupe; }
+    });
+  }
+  var tufpT=tugT>0?tufT/tugT*100:0;
   var totTr = document.createElement('tr');
   totTr.className = 'total-row';
   totTr.innerHTML =
     '<td style="padding-left:0"><strong>Total</strong></td>'+
     '<td>'+fmt(tot.gen)+'</td>'+
-    '<td style="'+colFail(tot.gen>0?tot.fail/tot.gen*100:0)+'">'+(tot.gen>0?(tot.fail/tot.gen*100).toFixed(1)+'%':'—')+'</td>'+
-    '<td style="'+colTrig(tot.gen>0?tot.trig/tot.gen*100:0)+'">'+(tot.gen>0?(tot.trig/tot.gen*100).toFixed(1)+'%':'—')+'</td>'+
+    '<td style="'+colTrig(ttp)+'">'+fmt(tot.trig)+'<br><span style="font-size:10px;color:var(--text-3)">'+ttp.toFixed(1)+'%</span></td>'+
+    '<td style="'+colFail(tfp)+'">'+fmt(tot.fail)+'<br><span style="font-size:10px;color:var(--text-3)">'+tfp.toFixed(1)+'%</span></td>'+
+    '<td>'+fmt(tApi)+'</td>'+
     '<td>'+fmt(tot.ret)+'</td>'+
-    '<td>'+(tot.trig>0?(tot.ret/tot.trig*100).toFixed(2)+'%':'—')+'</td>'+
-    '<td>'+(tot.gen>0?(tot.ret/tot.gen*100).toFixed(2)+'%':'—')+'</td>'+
-    '<td style="'+colOem(totOem)+'">'+totOem.toFixed(1)+'%</td>'+
-    '<td style="'+colDnf(totDnf)+'">'+totDnf.toFixed(1)+'%</td>';
+    '<td>'+(tcr?tcr.toFixed(2)+'%':'—')+'</td>'+
+    '<td>'+(tugT?fmt(tugT):'—')+'</td>'+
+    '<td style="'+colFail(tufpT)+'">'+(tugT?fmt(tufT)+'<br><span style="font-size:10px;color:var(--text-3)">'+tufpT.toFixed(1)+'%</span>':'—')+'</td>'+
+    '<td style="'+colDnf(tdnfpct)+'">'+fmt(tot.dnf)+'<br><span style="font-size:10px;color:var(--amber)">'+(tudnfT?fmt(tudnfT):'—')+'</span></td>'+
+    '<td style="'+colOem(toempct)+'">'+fmt(tot.oem)+'<br><span style="font-size:10px;color:var(--amber)">'+(tuoemT?fmt(tuoemT):'—')+'</span></td>';
   tbody.appendChild(totTr);
 }
 
