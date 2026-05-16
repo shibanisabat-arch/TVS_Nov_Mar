@@ -540,6 +540,13 @@
   <div class="page-title">Overall funnel</div>
   <div class="page-subtitle">Nov 2025 – Mar 2026 &nbsp;·&nbsp; All channels combined</div>
 
+  <!-- KPI toggle -->
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+    <div style="display:flex;border:0.5px solid var(--border);border-radius:99px;overflow:hidden;">
+      <button id="t1-btn-actual" onclick="setT1Toggle('actual')" style="font-size:12px;padding:5px 18px;border:none;cursor:pointer;background:var(--text);color:var(--bg);font-weight:600;">Actual</button>
+      <button id="t1-btn-unique" onclick="setT1Toggle('unique')" style="font-size:12px;padding:5px 18px;border:none;cursor:pointer;background:transparent;color:var(--text-2);font-weight:400;">Unique</button>
+    </div>
+  </div>
   <!-- KPI row — dynamic, rerenders on filter change -->
   <div id="t1-kpi-grid" class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));"></div>
 
@@ -730,8 +737,9 @@
             <th>Panel Leads</th>
             <th>Gen CPL</th>
             <th>LD Leads</th>
-            <th>Panel→LD%</th>
-            <th>Trigger%</th>
+            <th>Unique LD</th>
+            <th>Panel→Uniq LD%</th>
+            <th>Trig Quantum</th>
             <th>Trig CPL</th>
             <th>Retailed</th>
             <th>CR%</th>
@@ -828,7 +836,7 @@
         <thead>
           <tr>
             <th>Model</th><th>Spend</th><th>T1 Spend</th><th>T2 Spend</th><th>Panel Leads</th><th>Gen CPL</th>
-            <th>LD Leads</th><th>Panel→LD%</th><th>Trigger%</th><th>Trig CPL</th>
+            <th>LD Leads</th><th>Unique LD</th><th>Panel→Uniq LD%</th><th>Trig Quantum</th><th>Trig CPL</th>
             <th>TVS Ret</th><th>NMS Ret</th><th>Total Ret</th><th>CR%</th><th>Total ROAS</th><th>Margin</th>
           </tr>
         </thead>
@@ -2094,16 +2102,16 @@
 // ── DATA ────────────────────────────────────────────────────
 const DATA = {
   channels: [
-    { channel:"Meta",    generated:671401,  failed:262430,  triggered:398985, retailed:37928, oem_dupe:193103, dnf:28831,  fail_pct:39.1, trig_pct:59.4, cr_pct:9.51,  l_to_r:5.65, oem_pct:28.8, dnf_pct:4.3,  ret_share:47.4, color:"#378add" },
-    { channel:"GDN",     generated:421413,  failed:279060,  triggered:130875, retailed:13452, oem_dupe:183280, dnf:70578,  fail_pct:66.2, trig_pct:31.0, cr_pct:10.28, l_to_r:3.19, oem_pct:43.5, dnf_pct:16.7, ret_share:16.8, color:"#d85a30" },
-    { channel:"Organic", generated:1123529, failed:821087,  triggered:218233, retailed:28654, oem_dupe:520216, dnf:230264, fail_pct:73.1, trig_pct:19.4, cr_pct:13.13, l_to_r:2.55, oem_pct:46.3, dnf_pct:20.5, ret_share:35.8, color:"#1d9e75" }
+    { channel:"Meta",    generated:671401,  failed:262430,  triggered:398985, retailed:38765, oem_dupe:193103, dnf:28831,  fail_pct:39.1, trig_pct:59.4, cr_pct:9.72,  l_to_r:5.77, oem_pct:28.8, dnf_pct:4.3,  ret_share:47.2, color:"#378add" },
+    { channel:"GDN",     generated:421413,  failed:279060,  triggered:130875, retailed:13672, oem_dupe:183280, dnf:70578,  fail_pct:66.2, trig_pct:31.1, cr_pct:10.45, l_to_r:3.24, oem_pct:43.5, dnf_pct:16.7, ret_share:16.7, color:"#d85a30" },
+    { channel:"Organic", generated:1123529, failed:821087,  triggered:218233, retailed:29201, oem_dupe:520216, dnf:230264, fail_pct:73.1, trig_pct:19.4, cr_pct:13.38, l_to_r:2.6, oem_pct:46.3, dnf_pct:20.5, ret_share:35.8, color:"#1d9e75" }
   ],
   months: [
-    { gen_month:"Nov 2025", generated:497043, failed:336152, triggered:157753, retailed:16114, gen_only:3138,  oem_dupe:213302, dnf:100211, fail_pct:67.6, trig_pct:31.7, cr_pct:10.21, l_to_r:3.24, oem_pct:42.9, dnf_pct:20.2, city_mm:668,  pack_cap:15 },
-    { gen_month:"Dec 2025", generated:436260, failed:285163, triggered:148291, retailed:15499, gen_only:2806,  oem_dupe:195867, dnf:68365,  fail_pct:65.4, trig_pct:34.0, cr_pct:10.45, l_to_r:3.55, oem_pct:44.9, dnf_pct:15.7, city_mm:549,  pack_cap:33 },
-    { gen_month:"Jan 2026", generated:422697, failed:275917, triggered:143703, retailed:15797, gen_only:3077,  oem_dupe:186585, dnf:59304,  fail_pct:65.3, trig_pct:34.0, cr_pct:10.99, l_to_r:3.74, oem_pct:44.1, dnf_pct:14.0, city_mm:3298, pack_cap:5304 },
-    { gen_month:"Feb 2026", generated:411876, failed:254493, triggered:143932, retailed:16540, gen_only:13451, oem_dupe:165166, dnf:53952,  fail_pct:61.8, trig_pct:34.9, cr_pct:11.49, l_to_r:4.02, oem_pct:40.1, dnf_pct:13.1, city_mm:5752, pack_cap:6056 },
-    { gen_month:"Mar 2026", generated:448467, failed:210852, triggered:154414, retailed:16084, gen_only:83201, oem_dupe:135679, dnf:47841,  fail_pct:47.0, trig_pct:34.4, cr_pct:10.42, l_to_r:3.59, oem_pct:30.3, dnf_pct:10.7, city_mm:7695, pack_cap:3574 }
+    { gen_month:"Nov 2025", generated:497043, failed:336152, triggered:157753, retailed:16114, gen_only:3138,  oem_dupe:213302, dnf:100211,  fail_pct:67.6, trig_pct:31.7, cr_pct:10.21, l_to_r:3.24, oem_pct:42.9, dnf_pct:20.2, city_mm:668, pack_cap:15 },
+    { gen_month:"Dec 2025", generated:436260, failed:285163, triggered:148291, retailed:15499, gen_only:2806,  oem_dupe:195867, dnf:68365,  fail_pct:65.4, trig_pct:34.0, cr_pct:10.45, l_to_r:3.55, oem_pct:44.9, dnf_pct:15.7, city_mm:549, pack_cap:33 },
+    { gen_month:"Jan 2026", generated:422697, failed:275917, triggered:143703, retailed:15805, gen_only:3077,  oem_dupe:186585, dnf:59304,  fail_pct:65.3, trig_pct:34.0, cr_pct:11.0, l_to_r:3.74, oem_pct:44.1, dnf_pct:14.0, city_mm:3298, pack_cap:5304 },
+    { gen_month:"Feb 2026", generated:411876, failed:254493, triggered:143932, retailed:16683, gen_only:13451,  oem_dupe:165166, dnf:53952,  fail_pct:61.8, trig_pct:34.9, cr_pct:11.59, l_to_r:4.05, oem_pct:40.1, dnf_pct:13.1, city_mm:5752, pack_cap:6056 },
+    { gen_month:"Mar 2026", generated:448467, failed:210852, triggered:154414, retailed:17537, gen_only:83201,  oem_dupe:135679, dnf:47841,  fail_pct:47.0, trig_pct:34.4, cr_pct:11.36, l_to_r:3.91, oem_pct:30.3, dnf_pct:10.7, city_mm:7695, pack_cap:3574 }
   ],
   models: [
     { model_family:"Apache", generated:468104, failed:294626, triggered:151972, retailed:18360, oem_dupe:206157, dnf:64957, fail_pct:62.9, trig_pct:32.5, cr_pct:12.08, l_to_r:3.92, oem_pct:44.0, dnf_pct:13.9, dnf_of_failed:22.0, ret_share:22.9 },
@@ -3352,94 +3360,140 @@ if (modelTbody) {
 }
 
 // Render filtered KPI summary
-function renderFilteredKPI() {
-  var modelFilter  = t1ActiveModels.length  > 0 ? t1ActiveModels  : null;
-  var monthFilter  = t1ActiveMonths.length  > 0 ? t1ActiveMonths  : null;
-  var channelFilter= t1ActiveChannels.length> 0 ? t1ActiveChannels: null;
+// Toggle state
+var t1Toggle = 'actual';
+function setT1Toggle(mode) {
+  t1Toggle = mode;
+  var btnA = document.getElementById('t1-btn-actual');
+  var btnU = document.getElementById('t1-btn-unique');
+  if (btnA && btnU) {
+    if (mode==='actual') {
+      btnA.style.background='var(--text)';btnA.style.color='var(--bg)';btnA.style.fontWeight='600';
+      btnU.style.background='transparent';btnU.style.color='var(--text-2)';btnU.style.fontWeight='400';
+    } else {
+      btnU.style.background='var(--text)';btnU.style.color='var(--bg)';btnU.style.fontWeight='600';
+      btnA.style.background='transparent';btnA.style.color='var(--text-2)';btnA.style.fontWeight='400';
+    }
+  }
+  renderFilteredKPI();
+}
 
-  // Same filter logic as channel rows and total row
+function renderFilteredKPI() {
+  var modelFilter   = t1ActiveModels.length   > 0 ? t1ActiveModels   : null;
+  var monthFilter   = t1ActiveMonths.length   > 0 ? t1ActiveMonths   : null;
+  var channelFilter = t1ActiveChannels.length > 0 ? t1ActiveChannels : null;
+
   var allCmm = CMM.filter(function(r) {
     return (!channelFilter || channelFilter.includes(r.ch)) &&
            (!modelFilter   || modelFilter.includes(r.m))   &&
            (!monthFilter   || monthFilter.includes(r.mo));
   });
-
   var gen=0,fail=0,trig=0,ret=0,oem_sum=0,dnf_sum=0,cnt=0;
   if (allCmm.length && (channelFilter || modelFilter || monthFilter)) {
     allCmm.forEach(function(r){gen+=r.gen;fail+=r.fail;trig+=r.trig;ret+=r.ret;oem_sum+=r.oem_pct;dnf_sum+=r.dnf_pct;cnt++;});
   } else {
-    // Use overall static totals when no filters active (CMM is a partial subset)
-    gen=2244926; fail=1362577; trig=748093; ret=80034; oem_sum=40.5; dnf_sum=14.9; cnt=1;
+    gen=2216343; fail=1362577; trig=748093; ret=81638; oem_sum=40.5; dnf_sum=14.9; cnt=1;
   }
 
-  // gen_only: sum from DATA.months for matching months, scale by channel ratio
   var go=0;
   DATA.months.forEach(function(m){
-    var mo_short = {'Nov 2025':"Nov'25",'Dec 2025':"Dec'25",'Jan 2026':"Jan'26",'Feb 2026':"Feb'26",'Mar 2026':"Mar'26"}[m.gen_month];
-    if (!monthFilter || monthFilter.includes(mo_short)) go += (m.gen_only||0);
+    var mo_short={'Nov 2025':"Nov'25",'Dec 2025':"Dec'25",'Jan 2026':"Jan'26",'Feb 2026':"Feb'26",'Mar 2026':"Mar'26"}[m.gen_month];
+    if (!monthFilter || monthFilter.includes(mo_short)) go+=(m.gen_only||0);
   });
-  if (channelFilter && gen > 0) go = Math.round(go * gen / 2216343);
+  if (go===0) go=gen-fail-trig;
+  if (channelFilter && gen>0) go=Math.round(go*gen/2216343);
 
-  var fp  = gen>0 ? fail/gen*100 : 0;
-  var tp  = gen>0 ? trig/gen*100 : 0;
-  var cr  = trig>0? ret/trig*100 : 0;
-  var ltr = gen>0 ? ret/gen*100  : 0;
-  var gop = gen>0 ? go/gen*100   : 0;
-  var oem = cnt>0 ? oem_sum/cnt  : 0;
-  var dnf = cnt>0 ? dnf_sum/cnt  : 0;
+  var ratio=gen>0?gen/2216343:1;
+  var int_fail=Math.round(401704*ratio), ext_fail=Math.round(960873*ratio);
+  var oem_q=Math.round(896599*ratio),    dnf_q=Math.round(329673*ratio);
 
-  function kpiCard(label, big, cls, small) {
+  var fp=gen>0?fail/gen*100:0, tp=gen>0?trig/gen*100:0;
+  var cr=trig>0?ret/trig*100:0, gop=gen>0?go/gen*100:0;
+  var oem=cnt>0?oem_sum/cnt:0,  dnf=cnt>0?dnf_sum/cnt:0;
+
+  var ugChMoMap2={};
+  UNIQUE_GEN_CHANNEL_MONTH.forEach(function(u){ ugChMoMap2[u.ch+'|'+u.mo]=u; });
+  var allMo=["Nov'25","Dec'25","Jan'26","Feb'26","Mar'26"];
+  var allCh=["Meta","GDN","Organic"];
+  var moMap={"Nov'25":"Nov 2025","Dec'25":"Dec 2025","Jan'26":"Jan 2026","Feb'26":"Feb 2026","Mar'26":"Mar 2026"};
+  var activeMo=(monthFilter&&monthFilter.length)?monthFilter:allMo;
+  var activeCh=(channelFilter&&channelFilter.length)?channelFilter:allCh;
+  var u_gen=0,u_fail=0,u_trig=0,u_oem=0,u_dnf=0;
+  activeCh.forEach(function(ch){ activeMo.forEach(function(mo){
+    var ug=ugChMoMap2[ch+'|'+mo]||{};
+    u_gen+=ug.total||0; u_fail+=ug.failed||0; u_trig+=ug.triggered||0;
+    u_oem+=ug.oem_dupe||0; u_dnf+=ug.dnf||0;
+  });});
+
+  var u_int=0,u_ext=0;
+  if (!channelFilter&&!monthFilter&&!modelFilter){
+    u_int=145191;u_ext=208476;u_oem=188046;u_dnf=108616;
+  } else if (channelFilter&&!monthFilter&&!modelFilter){
+    activeCh.forEach(function(ch){
+      var row=FAIL_FUNNEL_CHANNELS.find(function(r){return r.channel===ch;})||{};
+      u_int+=row.unique_int_fail||0; u_ext+=row.unique_ext_fail||0;
+    });
+  } else if (monthFilter&&!channelFilter&&!modelFilter){
+    activeMo.forEach(function(mo){
+      var fullMo=moMap[mo]||mo;
+      var row=FAIL_FUNNEL_MONTHS.find(function(r){return r.month===fullMo;})||{};
+      u_int+=row.unique_int_fail||0; u_ext+=row.unique_ext_fail||0;
+    });
+  } else {
+    var ufr=u_fail/353667;
+    u_int=Math.round(145191*ufr); u_ext=Math.round(208476*ufr);
+  }
+
+  var u_trig_correct=(!channelFilter&&!monthFilter&&!modelFilter)?745015:u_trig;
+  if (!channelFilter&&!monthFilter&&!modelFilter){u_oem=188046;u_dnf=108616;}
+  var u_fp=u_gen>0?u_fail/u_gen*100:0, u_tp=u_gen>0?u_trig_correct/u_gen*100:0;
+  var u_op=u_gen>0?u_oem/u_gen*100:0,  u_dp=u_gen>0?u_dnf/u_gen*100:0;
+  var u_cr=u_trig_correct>0?ret/u_trig_correct*100:0;
+
+  function kpiCard(label,big,cls,small){
     return '<div class="kpi"><div class="kpi-label">'+label+'</div>'+
       '<div class="kpi-value '+(cls||'')+'">'+big+
       (small?'<span style="font-size:13px;font-weight:400;display:block;color:var(--text-2)">'+small+'</span>':'')+
       '</div></div>';
   }
+  var grid=document.getElementById('t1-kpi-grid');
+  var fmt=function(n){return Math.round(n).toLocaleString('en-IN');};
+  if (!grid) return;
 
-  var grid = document.getElementById('t1-kpi-grid');
-  var fmtFull = function(n) { return Math.round(n).toLocaleString('en-IN'); };
-  if (grid) {
-    grid.innerHTML =
-      kpiCard('Generated',  fmtFull(gen),            '',                       '') +
-      kpiCard('Relevant Gen', fmtFull(gen - 2583),   '',                       'Out-scope DNF removed') +
-      kpiCard('Failed',     fp.toFixed(1)+'%',       fp>65?'danger':fp>50?'':'success', fmtFull(fail)+' leads') +
-      (function(){
-        // Compute unique gen/failed using active filters
-        var ugChMoMap2 = {};
-        UNIQUE_GEN_CHANNEL_MONTH.forEach(function(u){ ugChMoMap2[u.ch+'|'+u.mo]=u; });
-        var allMonthsShort = ["Nov'25","Dec'25","Jan'26","Feb'26","Mar'26"];
-        var allChannels2  = ["Meta","GDN","Organic"];
-        var activeMonthsShort = (monthFilter && monthFilter.length) ? monthFilter : allMonthsShort;
-        var activeChannels2 = (channelFilter && channelFilter.length) ? channelFilter : allChannels2;
-        var u_gen=0, u_fail=0;
-        activeChannels2.forEach(function(ch){
-          activeMonthsShort.forEach(function(mo){
-            var ug = ugChMoMap2[ch+'|'+mo] || {};
-            u_gen  += ug.total  || 0;
-            u_fail += ug.failed || 0;
-          });
-        });
-        var uf_pct = u_gen>0 ? u_fail/u_gen*100 : 0;
-        return kpiCard('Unique Gen', fmtFull(u_gen), '', '') +
-               kpiCard('Unique Failed', uf_pct.toFixed(1)+'%', uf_pct>65?'danger':'', fmtFull(u_fail)+' uniq leads');
-      })() +
-      kpiCard('Triggered',  tp.toFixed(1)+'%',       '',                       fmtFull(trig)+' leads') +
-      kpiCard('Retailed',   fmtFull(ret),             'success',                'CR '+cr.toFixed(2)+'% · L-to-R '+ltr.toFixed(2)+'%') +
-      kpiCard('Gen Only',   gop.toFixed(1)+'%',      '',                       fmtFull(go)+' leads') +
-      kpiCard('CR%',        cr.toFixed(2)+'%',        cr>=10?'success':'',      'Ret ÷ Triggered') +
-      kpiCard('L-to-R%',   ltr.toFixed(2)+'%',       '',                       'Ret ÷ Generated') +
-      kpiCard('OEM Dupe%', oem.toFixed(1)+'%',       oem>40?'danger':oem>30?'':'', 'Dupe÷Gen · OEM system reject') +
-      kpiCard('DNF%',       dnf.toFixed(1)+'%',       dnf>20?'danger':dnf>12?'':'', 'DNF÷Gen · No dealer mapped');
+  if (t1Toggle==='actual') {
+    grid.innerHTML=
+      kpiCard('Generated',      fmt(gen),             '',                              '')+
+      kpiCard('Relevant Gen',   fmt(gen-2583),        '',                              'Out-scope DNF removed')+
+      kpiCard('Failed',         fp.toFixed(1)+'%',    fp>65?'danger':fp>50?'':'success',fmt(fail)+' leads')+
+      kpiCard('Triggered',      tp.toFixed(1)+'%',    '',                              fmt(trig)+' leads')+
+      kpiCard('Retailed',       fmt(ret),             'success',                       'CR '+cr.toFixed(2)+'%')+
+      kpiCard('Gen Only',       gop.toFixed(1)+'%',   '',                              fmt(go)+' leads')+
+      kpiCard('CR%',            cr.toFixed(2)+'%',    cr>=10?'success':'',             'Ret ÷ Triggered')+
+      kpiCard('Ext Fail',       fmt(ext_fail),        'danger',                        '70.5% of fails')+
+      kpiCard('Int Fail',       fmt(int_fail),        '',                              '29.5% of fails')+
+      kpiCard('OEM Dupe%',      oem.toFixed(1)+'%',   oem>40?'danger':oem>30?'':'',   fmt(oem_q)+' leads')+
+      kpiCard('DNF%',           dnf.toFixed(1)+'%',   dnf>20?'danger':dnf>12?'':'',   fmt(dnf_q)+' leads');
+  } else {
+    grid.innerHTML=
+      kpiCard('Actual Gen',     fmt(gen),             '',                              '')+
+      kpiCard('Unique Gen',     fmt(u_gen),           '',                              '60-day deduped')+
+      kpiCard('Unique Failed',  u_fp.toFixed(1)+'%',  u_fp>40?'danger':'',            fmt(u_fail)+' leads')+
+      kpiCard('Unique Trig',    fmt(u_trig_correct),  '',                              u_tp.toFixed(1)+'% of uniq gen')+
+      kpiCard('Retailed',       fmt(ret),             'success',                       'CR '+u_cr.toFixed(2)+'%')+
+      kpiCard('CR%',            u_cr.toFixed(2)+'%',  u_cr>=10?'success':'',           'Ret ÷ Uniq Trig')+
+      kpiCard('Uniq Ext Fail',  fmt(u_ext),           'danger',                        '')+
+      kpiCard('Uniq Int Fail',  fmt(u_int),           '',                              '')+
+      kpiCard('Uniq OEM Dupe',  u_op.toFixed(1)+'%',  u_op>20?'danger':'',            fmt(u_oem)+' leads')+
+      kpiCard('Unique DNF%',    u_dp.toFixed(1)+'%',  u_dp>12?'danger':'',            fmt(u_dnf)+' leads');
   }
 
-  // Update subtitle to reflect active filters
-  var subtitle = document.querySelector('#tab1 .page-subtitle');
-  if (subtitle) {
-    var parts = [];
+  var subtitle=document.querySelector('#tab1 .page-subtitle');
+  if (subtitle){
+    var parts=[];
     if (channelFilter) parts.push(channelFilter.join(', '));
     if (modelFilter)   parts.push(modelFilter.join(', '));
     if (monthFilter)   parts.push(monthFilter.join(', '));
-    subtitle.textContent = 'Nov 2025 – Mar 2026  ·  ' +
-      (parts.length ? parts.join(' · ') : 'All channels combined');
+    subtitle.textContent='Nov 2025 – Mar 2026  ·  '+(parts.length?parts.join(' · '):'All channels combined');
   }
 }
 
@@ -3469,16 +3523,16 @@ if (failGrid) {
 
 // ── META DATA ────────────────────────────────────────────────
 var META_MODELS = [
-  {model:"Apache", spend:4108666, panel_leads:105845, ld_leads:148529, triggered:84201, retailed:10527, gen_cpl:39, trig_cpl:49, panel_to_ld:140.3, trig_pct:56.7, cr_pct:12.5, l_to_r:7.09, cost_per_retail:390, roas:2.05, revenue:8421600, margin:4312934},
-  {model:"Raider", spend:3748901, panel_leads:87440, ld_leads:109880, triggered:65226, retailed:6623, gen_cpl:43, trig_cpl:57, panel_to_ld:125.7, trig_pct:59.4, cr_pct:10.15, l_to_r:6.03, cost_per_retail:566, roas:1.41, revenue:5298400, margin:1549499},
-  {model:"Jupiter", spend:4663530, panel_leads:121340, ld_leads:119283, triggered:71593, retailed:6376, gen_cpl:38, trig_cpl:65, panel_to_ld:98.3, trig_pct:60.0, cr_pct:8.91, l_to_r:5.35, cost_per_retail:731, roas:1.09, revenue:5100800, margin:437270},
-  {model:"iQube", spend:1656527, panel_leads:89150, ld_leads:96795, triggered:61161, retailed:5110, gen_cpl:19, trig_cpl:27, panel_to_ld:108.6, trig_pct:63.2, cr_pct:8.35, l_to_r:5.28, cost_per_retail:324, roas:2.47, revenue:4088000, margin:2431473},
-  {model:"NTORQ", spend:1852338, panel_leads:51426, ld_leads:63460, triggered:38460, retailed:2868, gen_cpl:36, trig_cpl:48, panel_to_ld:123.4, trig_pct:60.6, cr_pct:7.46, l_to_r:4.52, cost_per_retail:646, roas:1.24, revenue:2294400, margin:442062},
-  {model:"Sport", spend:1841328, panel_leads:47728, ld_leads:55885, triggered:34778, retailed:2629, gen_cpl:39, trig_cpl:53, panel_to_ld:117.1, trig_pct:62.2, cr_pct:7.56, l_to_r:4.7, cost_per_retail:700, roas:1.14, revenue:2103200, margin:261872},
-  {model:"XL100", spend:1146956, panel_leads:30772, ld_leads:34657, triggered:22927, retailed:1875, gen_cpl:37, trig_cpl:50, panel_to_ld:112.6, trig_pct:66.2, cr_pct:8.18, l_to_r:5.41, cost_per_retail:612, roas:1.31, revenue:1500000, margin:353044},
-  {model:"Ronin", spend:623343, panel_leads:18303, ld_leads:21575, triggered:12246, retailed:1104, gen_cpl:34, trig_cpl:51, panel_to_ld:117.9, trig_pct:56.8, cr_pct:9.02, l_to_r:5.12, cost_per_retail:565, roas:1.42, revenue:883200, margin:259857},
-  {model:"Radeon", spend:579978, panel_leads:13097, ld_leads:17204, triggered:8146, retailed:781, gen_cpl:44, trig_cpl:71, panel_to_ld:131.4, trig_pct:47.3, cr_pct:9.59, l_to_r:4.54, cost_per_retail:743, roas:1.08, revenue:624800, margin:44822},
-  {model:"Zest", spend:44213, panel_leads:474, ld_leads:557, triggered:204, retailed:27, gen_cpl:93, trig_cpl:217, panel_to_ld:117.5, trig_pct:36.6, cr_pct:13.24, l_to_r:4.85, cost_per_retail:1638, roas:0.49, revenue:21600, margin:-22613},
+  {model:"Apache", spend:4108666, panel_leads:105845, ld_leads:148529, unique_ld:102101, panel_to_unique_ld:103.7, triggered:84201, unique_triggered:83209, retailed:10766, gen_cpl:39, trig_cpl:49, unique_trig_cpl:49, panel_to_ld:140.3, trig_pct:56.7, cr_pct:12.79, unique_cr:12.78, l_to_r:7.25, cost_per_retail:382, roas:2.1, revenue:8612800, margin:4504134},
+  {model:"Raider", spend:3748901, panel_leads:87440, ld_leads:109880, unique_ld:82916, panel_to_unique_ld:105.5, triggered:65226, unique_triggered:64291, retailed:6782, gen_cpl:43, trig_cpl:57, unique_trig_cpl:58, panel_to_ld:125.7, trig_pct:59.4, cr_pct:10.4, unique_cr:10.38, l_to_r:6.17, cost_per_retail:553, roas:1.45, revenue:5425600, margin:1676699},
+  {model:"Jupiter", spend:4663530, panel_leads:121340, ld_leads:119283, unique_ld:92202, panel_to_unique_ld:131.6, triggered:71593, unique_triggered:70568, retailed:6508, gen_cpl:38, trig_cpl:65, unique_trig_cpl:66, panel_to_ld:98.3, trig_pct:60.0, cr_pct:9.09, unique_cr:9.06, l_to_r:5.46, cost_per_retail:717, roas:1.12, revenue:5206400, margin:542870},
+  {model:"iQube", spend:1656527, panel_leads:89150, ld_leads:96795, unique_ld:84924, panel_to_unique_ld:105.0, triggered:61161, unique_triggered:60674, retailed:5235, gen_cpl:19, trig_cpl:27, unique_trig_cpl:27, panel_to_ld:108.6, trig_pct:63.2, cr_pct:8.56, unique_cr:8.55, l_to_r:5.41, cost_per_retail:316, roas:2.53, revenue:4188000, margin:2531473},
+  {model:"NTORQ", spend:1852338, panel_leads:51426, ld_leads:63460, unique_ld:48112, panel_to_unique_ld:106.9, triggered:38460, unique_triggered:37801, retailed:2920, gen_cpl:36, trig_cpl:48, unique_trig_cpl:49, panel_to_ld:123.4, trig_pct:60.6, cr_pct:7.59, unique_cr:7.55, l_to_r:4.6, cost_per_retail:634, roas:1.26, revenue:2336000, margin:483662},
+  {model:"Sport", spend:1841328, panel_leads:47728, ld_leads:55885, unique_ld:42672, panel_to_unique_ld:111.8, triggered:34778, unique_triggered:34248, retailed:2682, gen_cpl:39, trig_cpl:53, unique_trig_cpl:54, panel_to_ld:117.1, trig_pct:62.2, cr_pct:7.71, unique_cr:7.67, l_to_r:4.8, cost_per_retail:687, roas:1.17, revenue:2145600, margin:304272},
+  {model:"XL100", spend:1146956, panel_leads:30772, ld_leads:34657, unique_ld:29739, panel_to_unique_ld:103.5, triggered:22927, unique_triggered:22770, retailed:1906, gen_cpl:37, trig_cpl:50, unique_trig_cpl:50, panel_to_ld:112.6, trig_pct:66.2, cr_pct:8.31, unique_cr:8.34, l_to_r:5.5, cost_per_retail:602, roas:1.33, revenue:1524800, margin:377844},
+  {model:"Ronin", spend:623343, panel_leads:18303, ld_leads:21575, unique_ld:18303, panel_to_unique_ld:100.0, triggered:12246, unique_triggered:11734, retailed:1135, gen_cpl:34, trig_cpl:51, unique_trig_cpl:53, panel_to_ld:117.9, trig_pct:56.8, cr_pct:9.27, unique_cr:9.41, l_to_r:5.26, cost_per_retail:549, roas:1.46, revenue:908000, margin:284657},
+  {model:"Radeon", spend:579978, panel_leads:13097, ld_leads:17204, unique_ld:10784, panel_to_unique_ld:121.4, triggered:8146, unique_triggered:7989, retailed:796, gen_cpl:44, trig_cpl:71, unique_trig_cpl:73, panel_to_ld:131.4, trig_pct:47.3, cr_pct:9.77, unique_cr:9.8, l_to_r:4.63, cost_per_retail:729, roas:1.1, revenue:636800, margin:56822},
+  {model:"Zest", spend:44213, panel_leads:474, ld_leads:557, unique_ld:395, panel_to_unique_ld:120.0, triggered:204, unique_triggered:210, retailed:27, gen_cpl:93, trig_cpl:217, unique_trig_cpl:211, panel_to_ld:117.5, trig_pct:36.6, cr_pct:13.24, unique_cr:13.81, l_to_r:4.85, cost_per_retail:1638, roas:0.49, revenue:21600, margin:-22613},
 ];
 
 var META_MODEL_MONTHS = {
@@ -3563,19 +3617,19 @@ var ALL_MONTHS = ["Nov'25","Dec'25","Jan'26","Feb'26","Mar'26"];
 
 // ── GDN DATA ─────────────────────────────────────────────────
 var GDN_MODELS = [
-  {model:"Jupiter", spend:3564536, sp_t1:3361130, sp_t2:203407, panel_leads:89317, ld_leads:89271, tvs_trig:28536, tvs_ret:3549, nms_ret:368, retailed:3917, gen_cpl:40, trig_cpl:125, tvs_cr:13.73, tvs_cpr:910, cost_per_retail:910, roas:0.88, revenue:3133600, margin:-430936},
-  {model:"Apache", spend:1808670, sp_t1:1393882, sp_t2:414788, panel_leads:52634, ld_leads:46181, tvs_trig:12844, tvs_ret:1314, nms_ret:586, retailed:1900, gen_cpl:34, trig_cpl:141, tvs_cr:14.79, tvs_cpr:952, cost_per_retail:952, roas:0.84, revenue:1520000, margin:-288670},
-  {model:"Raider", spend:2304059, sp_t1:2166769, sp_t2:137290, panel_leads:45284, ld_leads:42157, tvs_trig:12267, tvs_ret:1339, nms_ret:543, retailed:1882, gen_cpl:51, trig_cpl:188, tvs_cr:15.34, tvs_cpr:1224, cost_per_retail:1224, roas:0.65, revenue:1505600, margin:-798459},
-  {model:"iQube", spend:503372, sp_t1:460037, sp_t2:43335, panel_leads:26661, ld_leads:37560, tvs_trig:12914, tvs_ret:1135, nms_ret:294, retailed:1429, gen_cpl:19, trig_cpl:39, tvs_cr:11.07, tvs_cpr:352, cost_per_retail:352, roas:2.27, revenue:1143200, margin:639828},
-  {model:"NTORQ", spend:768023, sp_t1:628455, sp_t2:139568, panel_leads:19327, ld_leads:30488, tvs_trig:8846, tvs_ret:957, nms_ret:275, retailed:1232, gen_cpl:40, trig_cpl:87, tvs_cr:13.93, tvs_cpr:623, cost_per_retail:623, roas:1.28, revenue:985600, margin:217577},
-  {model:"XL100", spend:561749, sp_t1:474392, sp_t2:87357, panel_leads:13966, ld_leads:22486, tvs_trig:6016, tvs_ret:824, nms_ret:85, retailed:909, gen_cpl:40, trig_cpl:93, tvs_cr:15.11, tvs_cpr:618, cost_per_retail:618, roas:1.29, revenue:727200, margin:165451},
-  {model:"Sport", spend:628536, sp_t1:524519, sp_t2:104017, panel_leads:16115, ld_leads:24421, tvs_trig:5981, tvs_ret:640, nms_ret:164, retailed:804, gen_cpl:39, trig_cpl:105, tvs_cr:13.44, tvs_cpr:782, cost_per_retail:782, roas:1.02, revenue:643200, margin:14664},
-  {model:"Ronin", spend:398879, sp_t1:380178, sp_t2:18701, panel_leads:13939, ld_leads:20047, tvs_trig:4649, tvs_ret:447, nms_ret:258, retailed:705, gen_cpl:29, trig_cpl:86, tvs_cr:15.16, tvs_cpr:566, cost_per_retail:566, roas:1.41, revenue:564000, margin:165121},
-  {model:"Radeon", spend:321937, sp_t1:287905, sp_t2:34032, panel_leads:6214, ld_leads:9959, tvs_trig:2689, tvs_ret:282, nms_ret:65, retailed:347, gen_cpl:52, trig_cpl:120, tvs_cr:12.9, tvs_cpr:928, cost_per_retail:928, roas:0.86, revenue:277600, margin:-44337},
-  {model:"Zest", spend:227641, sp_t1:225932, sp_t2:1709, panel_leads:4785, ld_leads:7055, tvs_trig:2277, tvs_ret:239, nms_ret:14, retailed:253, gen_cpl:48, trig_cpl:100, tvs_cr:11.11, tvs_cpr:900, cost_per_retail:900, roas:0.89, revenue:202400, margin:-25241},
-  {model:"Star City", spend:77755, sp_t1:69235, sp_t2:8520, panel_leads:1567, ld_leads:2984, tvs_trig:637, tvs_ret:64, nms_ret:10, retailed:74, gen_cpl:50, trig_cpl:122, tvs_cr:11.62, tvs_cpr:1051, cost_per_retail:1051, roas:0.76, revenue:59200, margin:-18555},
-  {model:"Other", spend:2705, sp_t1:0, sp_t2:2705, panel_leads:70, ld_leads:114, tvs_trig:0, tvs_ret:0, nms_ret:0, retailed:0, gen_cpl:39, trig_cpl:0, tvs_cr:0.0, tvs_cpr:0, cost_per_retail:0, roas:0.0, revenue:0, margin:-2705},
-  {model:"Orbiter", spend:6431, sp_t1:0, sp_t2:6431, panel_leads:166, ld_leads:271, tvs_trig:0, tvs_ret:0, nms_ret:0, retailed:0, gen_cpl:39, trig_cpl:0, tvs_cr:0.0, tvs_cpr:0, cost_per_retail:0, roas:0.0, revenue:0, margin:-6431},
+  {model:"Jupiter", spend:3564536, sp_t1:3361130, sp_t2:203407, panel_leads:89317, ld_leads:89271, unique_ld:45246, panel_to_unique_ld:197.4, tvs_trig:28536, unique_triggered:27085, tvs_ret:3162, nms_ret:390, retailed:3968, gen_cpl:40, trig_cpl:125, unique_trig_cpl:132, tvs_cr:13.91, tvs_cpr:898, cost_per_retail:898, roas:0.89, revenue:3174400, margin:-390136},
+  {model:"Apache", spend:1808670, sp_t1:1393882, sp_t2:414788, panel_leads:52633, ld_leads:46181, unique_ld:20218, panel_to_unique_ld:260.3, tvs_trig:12844, unique_triggered:11811, tvs_ret:700, nms_ret:602, retailed:1937, gen_cpl:34, trig_cpl:141, unique_trig_cpl:153, tvs_cr:15.08, tvs_cpr:934, cost_per_retail:934, roas:0.86, revenue:1549600, margin:-259070},
+  {model:"Raider", spend:2304059, sp_t1:2166769, sp_t2:137290, panel_leads:45284, ld_leads:42157, unique_ld:21172, panel_to_unique_ld:213.9, tvs_trig:12267, unique_triggered:11913, tvs_ret:1097, nms_ret:563, retailed:1918, gen_cpl:51, trig_cpl:188, unique_trig_cpl:193, tvs_cr:15.64, tvs_cpr:1201, cost_per_retail:1201, roas:0.67, revenue:1534400, margin:-769659},
+  {model:"iQube", spend:503372, sp_t1:460037, sp_t2:43335, panel_leads:26661, ld_leads:37560, unique_ld:21772, panel_to_unique_ld:122.5, tvs_trig:12914, unique_triggered:12376, tvs_ret:1082, nms_ret:302, retailed:1454, gen_cpl:19, trig_cpl:39, unique_trig_cpl:41, tvs_cr:11.26, tvs_cpr:346, cost_per_retail:346, roas:2.31, revenue:1163200, margin:659828},
+  {model:"NTORQ", spend:768023, sp_t1:628455, sp_t2:139568, panel_leads:19326, ld_leads:30488, unique_ld:15121, panel_to_unique_ld:127.8, tvs_trig:8846, unique_triggered:8483, tvs_ret:755, nms_ret:291, retailed:1251, gen_cpl:40, trig_cpl:87, unique_trig_cpl:91, tvs_cr:14.14, tvs_cpr:614, cost_per_retail:614, roas:1.3, revenue:1000800, margin:232777},
+  {model:"XL100", spend:561749, sp_t1:474392, sp_t2:87357, panel_leads:13965, ld_leads:22486, unique_ld:9721, panel_to_unique_ld:143.7, tvs_trig:6016, unique_triggered:5656, tvs_ret:665, nms_ret:86, retailed:915, gen_cpl:40, trig_cpl:93, unique_trig_cpl:99, tvs_cr:15.21, tvs_cpr:614, cost_per_retail:614, roas:1.3, revenue:732000, margin:170251},
+  {model:"Sport", spend:628536, sp_t1:524519, sp_t2:104017, panel_leads:16115, ld_leads:24421, unique_ld:10589, panel_to_unique_ld:152.2, tvs_trig:5981, unique_triggered:5732, tvs_ret:505, nms_ret:170, retailed:812, gen_cpl:39, trig_cpl:105, unique_trig_cpl:110, tvs_cr:13.58, tvs_cpr:774, cost_per_retail:774, roas:1.03, revenue:649600, margin:21064},
+  {model:"Ronin", spend:398879, sp_t1:380178, sp_t2:18701, panel_leads:13938, ld_leads:20047, unique_ld:11161, panel_to_unique_ld:124.9, tvs_trig:4649, unique_triggered:4446, tvs_ret:435, nms_ret:282, retailed:734, gen_cpl:29, trig_cpl:86, unique_trig_cpl:90, tvs_cr:15.79, tvs_cpr:543, cost_per_retail:543, roas:1.47, revenue:587200, margin:188321},
+  {model:"Radeon", spend:321937, sp_t1:287905, sp_t2:34032, panel_leads:6214, ld_leads:9959, unique_ld:4764, panel_to_unique_ld:130.4, tvs_trig:2689, unique_triggered:2594, tvs_ret:236, nms_ret:67, retailed:353, gen_cpl:52, trig_cpl:120, unique_trig_cpl:124, tvs_cr:13.13, tvs_cpr:912, cost_per_retail:912, roas:0.88, revenue:282400, margin:-39537},
+  {model:"Zest", spend:227641, sp_t1:225932, sp_t2:1709, panel_leads:4785, ld_leads:7055, unique_ld:3494, panel_to_unique_ld:136.9, tvs_trig:2277, unique_triggered:2202, tvs_ret:240, nms_ret:14, retailed:256, gen_cpl:48, trig_cpl:100, unique_trig_cpl:103, tvs_cr:11.24, tvs_cpr:889, cost_per_retail:889, roas:0.9, revenue:204800, margin:-22841},
+  {model:"Star City", spend:77755, sp_t1:69235, sp_t2:8520, panel_leads:1567, ld_leads:2984, unique_ld:1575, panel_to_unique_ld:99.5, tvs_trig:637, unique_triggered:619, tvs_ret:56, nms_ret:10, retailed:74, gen_cpl:50, trig_cpl:122, unique_trig_cpl:126, tvs_cr:11.62, tvs_cpr:1051, cost_per_retail:1051, roas:0.76, revenue:59200, margin:-18555},
+  {model:"Other", spend:2705, sp_t1:0, sp_t2:2705, panel_leads:70, ld_leads:114, unique_ld:77, panel_to_unique_ld:90.9, tvs_trig:0, unique_triggered:0, tvs_ret:0, nms_ret:0, retailed:0, gen_cpl:39, trig_cpl:0, unique_trig_cpl:0, tvs_cr:0.0, tvs_cpr:0, cost_per_retail:0, roas:0.0, revenue:0, margin:-2705},
+  {model:"Orbiter", spend:6431, sp_t1:0, sp_t2:6431, panel_leads:166, ld_leads:271, unique_ld:320, panel_to_unique_ld:51.9, tvs_trig:0, unique_triggered:0, tvs_ret:0, nms_ret:0, retailed:0, gen_cpl:39, trig_cpl:0, unique_trig_cpl:0, tvs_cr:0.0, tvs_cpr:0, cost_per_retail:0, roas:0.0, revenue:0, margin:-6431},
 ];
 var GDN_MODEL_MONTHS = {
   Apache:[
@@ -3645,11 +3699,11 @@ var GDN_MODEL_MONTHS = {
 
 var GDN_ALL_MONTHS = ["Nov'25","Dec'25","Jan'26","Feb'26","Mar'26"];
 var GDN_MONTHS_TOTAL = [
-  {m:"Nov'25", spend:3124452, panel_leads:88095, ld_leads:102517, generated:102517, triggered:29417, tvs_trig:29417, tvs_ret:3088, nms_ret:295, retailed:3383, gen_cpl:35, trig_cpl:106, cost_per_retail:924, roas:0.87, revenue:2706400, margin:-418052},
-  {m:"Dec'25", spend:2793871, panel_leads:71001, ld_leads:78279, generated:78279, triggered:23766, tvs_trig:23766, tvs_ret:2379, nms_ret:573, retailed:2952, gen_cpl:39, trig_cpl:118, cost_per_retail:946, roas:0.85, revenue:2361600, margin:-432271},
-  {m:"Jan'26", spend:2267864, panel_leads:51981, ld_leads:60850, generated:60850, triggered:18000, tvs_trig:18000, tvs_ret:2039, nms_ret:430, retailed:2469, gen_cpl:44, trig_cpl:126, cost_per_retail:919, roas:0.87, revenue:1975200, margin:-292664},
-  {m:"Feb'26", spend:1869075, panel_leads:45955, ld_leads:52587, generated:52587, triggered:15781, tvs_trig:15781, tvs_ret:1943, nms_ret:488, retailed:2431, gen_cpl:41, trig_cpl:118, cost_per_retail:769, roas:1.04, revenue:1944800, margin:75725},
-  {m:"Mar'26", spend:1119031, panel_leads:33012, ld_leads:38761, generated:38761, triggered:10692, tvs_trig:10692, tvs_ret:1341, nms_ret:876, retailed:2217, gen_cpl:34, trig_cpl:105, cost_per_retail:505, roas:1.58, revenue:1773600, margin:654569},
+  {m:"Nov'25", spend:3124452, panel_leads:88094, ld_leads:102517, tvs_trig:29417, tvs_ret:2744, nms_ret:295, retailed:3383, gen_cpl:35, trig_cpl:106, revenue:2706400, margin:-418052, roas:0.87},
+  {m:"Dec'25", spend:2793871, panel_leads:71001, ld_leads:78279, tvs_trig:23766, tvs_ret:1913, nms_ret:573, retailed:2952, gen_cpl:39, trig_cpl:118, revenue:2361600, margin:-432271, roas:0.85},
+  {m:"Jan'26", spend:2267864, panel_leads:51981, ld_leads:60850, tvs_trig:18000, tvs_ret:1749, nms_ret:432, retailed:2472, gen_cpl:44, trig_cpl:126, revenue:1977600, margin:-290264, roas:0.87},
+  {m:"Feb'26", spend:1869075, panel_leads:45955, ld_leads:52587, tvs_trig:15781, tvs_ret:1525, nms_ret:490, retailed:2444, gen_cpl:41, trig_cpl:118, revenue:1955200, margin:86125, roas:1.05},
+  {m:"Mar'26", spend:1119031, panel_leads:33012, ld_leads:38761, tvs_trig:10692, tvs_ret:1002, nms_ret:987, retailed:2421, gen_cpl:34, trig_cpl:105, revenue:1936800, margin:817769, roas:1.73}
 ];
 var HIGHLIGHTS = [
   {key:'none',  label:'None'},
@@ -3722,12 +3776,16 @@ function t2RenderModelTable() {
     if (!months.length) return;
     var spend=0,panel=0,ld=0,trig=0,ret=0,rev=0,margin=0;
     months.forEach(function(mo) { spend+=mo.spend; panel+=mo.panel_leads; ld+=mo.ld_leads||0; trig+=mo.triggered; ret+=mo.retailed; rev+=mo.revenue; margin+=mo.margin; });
-    var gen_cpl  = panel>0 ? Math.round(spend/panel) : 0;
-    var trig_cpl = trig>0  ? Math.round(spend/trig)  : 0;
-    var ptl      = panel>0 ? (ld/panel*100)  : 0;
-    var trig_pct = ld>0    ? (trig/ld*100)   : 0;
-    var cr       = trig>0  ? (ret/trig*100)  : 0;
-    var roas     = spend>0 ? rev/spend       : 0;
+    var gen_cpl   = panel>0 ? Math.round(spend/panel) : 0;
+    var trig_cpl  = trig>0  ? Math.round(spend/trig)  : 0;
+    var ptl       = panel>0 ? (ld/panel*100)  : 0;
+    var trig_pct  = ld>0    ? (trig/ld*100)   : 0;
+    var cr        = trig>0  ? (ret/trig*100)  : 0;
+    var roas      = spend>0 ? rev/spend       : 0;
+    var uniq_ld   = m.unique_ld   || 0;
+    var uniq_trig = m.unique_triggered || 0;
+    var p2ul      = uniq_ld>0 ? (panel/uniq_ld*100) : 0;
+    var u_tcpl    = uniq_trig>0 ? Math.round(spend/uniq_trig) : 0;
     function hlStyle(col, val) {
       if (!hl || hl.key==='none' || hl.col!==col) return '';
       return ' style="background:'+hlBg(hl,val)+'"';
@@ -3741,13 +3799,14 @@ function t2RenderModelTable() {
       '<td>'+fmt(panel)+'</td>'+
       '<td>\u20b9'+gen_cpl+'</td>'+
       '<td>'+fmt(ld)+'</td>'+
-      '<td>'+ptlFlag(ptl)+'</td>'+
-      '<td'+hlStyle(6,trig_pct)+'>'+trig_pct.toFixed(1)+'%</td>'+
-      '<td>\u20b9'+trig_cpl+'</td>'+
+      '<td>'+fmt(uniq_ld)+'</td>'+
+      '<td>'+ptlFlag(p2ul)+'</td>'+
+      '<td>'+fmt(uniq_trig)+'</td>'+
+      '<td>\u20b9'+u_tcpl+'</td>'+
       '<td>'+fmt(ret)+'</td>'+
-      '<td'+hlStyle(9,cr)+'>'+cr.toFixed(2)+'%</td>'+
-      '<td'+hlStyle(10,roas)+'>'+roasBadge(roas)+'</td>'+
-      '<td'+hlStyle(11,margin)+'>'+marginFmt(margin)+'</td>';
+      '<td'+hlStyle(10,cr)+'>'+cr.toFixed(2)+'%</td>'+
+      '<td'+hlStyle(11,roas)+'>'+roasBadge(roas)+'</td>'+
+      '<td'+hlStyle(12,margin)+'>'+marginFmt(margin)+'</td>';
     tr.addEventListener('click', function() { t2ToggleModel(m.model); });
     tbody.appendChild(tr);
   });
@@ -3763,14 +3822,19 @@ function t2RenderModelTable() {
     var tTr = document.createElement('tr');
     tTr.className = 'total-row';
     var tRoas = t.rev/t.spend;
+    var tUL = 0, tUT = 0;
+    t2GetModels().forEach(function(m){ tUL+=(m.unique_ld||0); tUT+=(m.unique_triggered||0); });
+    var tP2UL = tUL>0 ? (t.panel/tUL*100) : 0;
+    var tUTCPL = tUT>0 ? Math.round(t.spend/tUT) : 0;
     tTr.innerHTML = '<td><strong>Total</strong></td>'+
       '<td>\u20b9'+fmtCr(t.spend)+'</td>'+
       '<td>'+fmt(t.panel)+'</td>'+
       '<td>\u20b9'+(t.panel>0?Math.round(t.spend/t.panel):'\u2014')+'</td>'+
       '<td>'+fmt(t.ld)+'</td>'+
-      '<td>'+(t.panel>0?(t.ld/t.panel*100).toFixed(1)+'%':'\u2014')+'</td>'+
-      '<td>'+(t.ld>0?(t.trig/t.ld*100).toFixed(1)+'%':'\u2014')+'</td>'+
-      '<td>\u20b9'+(t.trig>0?Math.round(t.spend/t.trig):'\u2014')+'</td>'+
+      '<td>'+fmt(tUL)+'</td>'+
+      '<td>'+ptlFlag(tP2UL)+'</td>'+
+      '<td>'+fmt(tUT)+'</td>'+
+      '<td>\u20b9'+tUTCPL+'</td>'+
       '<td>'+fmt(t.ret)+'</td>'+
       '<td>'+(t.trig>0?(t.ret/t.trig*100).toFixed(2)+'%':'\u2014')+'</td>'+
       '<td>'+roasBadge(tRoas)+'</td>'+
@@ -4262,27 +4326,32 @@ function t3RenderModelTable() {
     totNms+=nms_ret; totSpend+=spend; totPanel+=panel; totLd+=ld;
     totTrig+=trig; totTvs+=tvs_ret; totRet+=ret; totRev+=(ret*800); totMgn+=margin;
 
-    var gen_cpl  = panel>0   ? Math.round(spend/panel) : 0;
-    var trig_cpl = trig>0    ? Math.round(spend/trig)  : 0;
-    var ptl      = panel>0   ? (ld/panel*100)          : 0;
-    var cr       = trig>0    ? (tvs_ret/trig*100)      : 0;
-    var tot_roas = spend>0   ? ret*800/spend             : 0;
+    var gen_cpl   = panel>0   ? Math.round(spend/panel) : 0;
+    var trig_cpl  = trig>0    ? Math.round(spend/trig)  : 0;
+    var ptl       = panel>0   ? (ld/panel*100)          : 0;
+    var cr        = trig>0    ? (tvs_ret/trig*100)      : 0;
+    var tot_roas  = spend>0   ? ret*800/spend           : 0;
+    var uniq_ld   = m.unique_ld        || 0;
+    var uniq_trig = m.unique_triggered || 0;
+    var p2ul      = uniq_ld>0 ? (panel/uniq_ld*100)    : 0;
+    var u_tcpl    = uniq_trig>0 ? Math.round(spend/uniq_trig) : 0;
 
     function hlS(col, val) { return (!hl||hl.key==='none'||hl.col!==col)?'':' style="background:'+hlBg(hl,val)+'"'; }
     var months = t3GetMonths(m.model);
     var tr = document.createElement('tr');
     tr.className = 'clickable'+(t3ActiveModel===m.model?' row-open':'');
     tr.innerHTML =
-      '<td>'+m.model+(months.length?'<span class="toggle-arrow">\u25b6</span>':'')+'</td>'+
-      '<td>\u20b9'+fmtCr(spend)+'</td>'+
-      '<td style="font-size:11px;color:var(--text-2)">\u20b9'+fmtCr(sp_t1)+'</td>'+
-      '<td style="font-size:11px;color:var(--text-2)">\u20b9'+fmtCr(sp_t2)+'</td>'+
+      '<td>'+m.model+(months.length?'<span class="toggle-arrow">▶</span>':'')+'</td>'+
+      '<td>₹'+fmtCr(spend)+'</td>'+
+      '<td style="font-size:11px;color:var(--text-2)">₹'+fmtCr(sp_t1)+'</td>'+
+      '<td style="font-size:11px;color:var(--text-2)">₹'+fmtCr(sp_t2)+'</td>'+
       '<td>'+fmt(panel)+'</td>'+
-      '<td>\u20b9'+gen_cpl+'</td>'+
+      '<td>₹'+gen_cpl+'</td>'+
       '<td>'+fmt(ld)+'</td>'+
-      '<td>'+ptlFlag(ptl)+'</td>'+
-      '<td>'+(ld>0?(trig/ld*100).toFixed(1)+'%':'—')+'</td>'+
-      '<td>\u20b9'+trig_cpl+'</td>'+
+      '<td>'+fmt(uniq_ld)+'</td>'+
+      '<td>'+ptlFlag(p2ul)+'</td>'+
+      '<td>'+fmt(uniq_trig)+'</td>'+
+      '<td>₹'+u_tcpl+'</td>'+
       '<td>'+fmt(tvs_ret)+'</td>'+
       '<td style="color:var(--blue)">+'+nms_ret+'</td>'+
       '<td style="font-weight:500">'+fmt(ret)+'</td>'+
@@ -4304,20 +4373,25 @@ function t3RenderModelTable() {
     // T1/T2 split from GDN_MODELS
     GDN_MODELS.forEach(function(m){ authT1Spend+=(m.sp_t1||0); authT2Spend+=(m.sp_t2||0); });
     var tTr = document.createElement('tr'); tTr.className='total-row';
+    var tUL=0, tUT=0;
+    t3GetModels().forEach(function(m){ tUL+=(m.unique_ld||0); tUT+=(m.unique_triggered||0); });
+    var tP2UL  = tUL>0 ? (authPanel/tUL*100) : 0;
+    var tUTCPL = tUT>0 ? Math.round(authSpend/tUT) : 0;
     tTr.innerHTML = '<td><strong>Total</strong></td>'+
       '<td>\u20b9'+fmtCr(authSpend)+'</td>'+
       '<td style="font-size:11px">\u20b9'+fmtCr(authT1Spend)+'</td>'+
       '<td style="font-size:11px">\u20b9'+fmtCr(authT2Spend)+'</td>'+
       '<td>'+fmt(authPanel)+'</td>'+
-      '<td>\u20b9'+(authPanel>0?Math.round(authSpend/authPanel):'—')+'</td>'+
+      '<td>\u20b9'+(authPanel>0?Math.round(authSpend/authPanel):'\u2014')+'</td>'+
       '<td>'+fmt(authLd)+'</td>'+
-      '<td>'+(authPanel>0?(authLd/authPanel*100).toFixed(1)+'%':'—')+'</td>'+
-      '<td>'+(authLd>0?(authTrig/authLd*100).toFixed(1)+'%':'—')+'</td>'+
-      '<td>\u20b9'+(authTrig>0?Math.round(authSpend/authTrig):'—')+'</td>'+
+      '<td>'+fmt(tUL)+'</td>'+
+      '<td>'+ptlFlag(tP2UL)+'</td>'+
+      '<td>'+fmt(tUT)+'</td>'+
+      '<td>\u20b9'+tUTCPL+'</td>'+
       '<td>'+fmt(authTvsRet)+'</td>'+
       '<td style="color:var(--blue)">+'+authNmsRet+'</td>'+
       '<td style="font-weight:600">'+fmt(authRet)+'</td>'+
-      '<td>'+(authTrig>0?(authTvsRet/authTrig*100).toFixed(2)+'%':'—')+'</td>'+
+      '<td>'+(authTrig>0?(authTvsRet/authTrig*100).toFixed(2)+'%':'\u2014')+'</td>'+
       '<td>'+roasBadge(authSpend>0?authRet*800/authSpend:0)+'</td>'+
       '<td>'+marginFmt(authMargin)+'</td>';
     tbody.appendChild(tTr);
