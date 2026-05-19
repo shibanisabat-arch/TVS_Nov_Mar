@@ -3613,11 +3613,11 @@ var META_MODEL_MONTHS = {
 };
 
 var META_MONTHS_TOTAL = [
-  {m:"Nov'25", ms_ret:7046, nms_ret:323, spend:3563542, panel_leads:117136, ld_leads:139184, cleaned_leads:111849, triggered:83899, retailed:7369, gen_cpl:30, trig_cpl:42, panel_to_ld_pct:118.8, trig_pct:61.3, cr_pct:8.78, cost_per_retail:492, roas:1.63, revenue:5895200, margin:2227658},
-  {m:"Dec'25", ms_ret:6162, nms_ret:295, spend:3341379, panel_leads:96727, ld_leads:115538, cleaned_leads:91063, triggered:68162, retailed:6457, gen_cpl:35, trig_cpl:49, panel_to_ld_pct:119.4, trig_pct:60.6, cr_pct:9.47, cost_per_retail:525, roas:1.52, revenue:5165600, margin:1751421},
-  {m:"Jan'26", ms_ret:7279, nms_ret:342, spend:3840649, panel_leads:109847, ld_leads:128603, cleaned_leads:104729, triggered:75891, retailed:7621, gen_cpl:35, trig_cpl:51, panel_to_ld_pct:117.1, trig_pct:59.4, cr_pct:10.04, cost_per_retail:516, roas:1.55, revenue:6096800, margin:2112151},
-  {m:"Feb'26", ms_ret:8947, nms_ret:337, spend:4450155, panel_leads:119301, ld_leads:141974, cleaned_leads:121256, triggered:84452, retailed:9284, gen_cpl:37, trig_cpl:53, panel_to_ld_pct:119.0, trig_pct:58.2, cr_pct:10.99, cost_per_retail:512, roas:1.56, revenue:7427200, margin:2497045},
-  {m:"Mar'26", ms_ret:8679, nms_ret:412, spend:5070053, panel_leads:122564, ld_leads:142526, cleaned_leads:117533, triggered:83249, retailed:9091, gen_cpl:41, trig_cpl:61, panel_to_ld_pct:116.3, trig_pct:59.3, cr_pct:10.92, cost_per_retail:619, roas:1.29, revenue:7272800, margin:1481947},
+  {m:"Nov'25", ms_ret:7046, nms_ret:323, spend:3563542, panel_leads:117136, ld_leads:139184, cleaned_leads:112030, triggered:83899, retailed:7369, gen_cpl:30, trig_cpl:42, panel_to_ld_pct:118.8, trig_pct:61.3, cr_pct:8.78, cost_per_retail:492, roas:1.63, revenue:5895200, margin:2227658},
+  {m:"Dec'25", ms_ret:6162, nms_ret:295, spend:3341379, panel_leads:96727, ld_leads:115538, cleaned_leads:91190, triggered:68162, retailed:6457, gen_cpl:35, trig_cpl:49, panel_to_ld_pct:119.4, trig_pct:60.6, cr_pct:9.47, cost_per_retail:525, roas:1.52, revenue:5165600, margin:1751421},
+  {m:"Jan'26", ms_ret:7279, nms_ret:342, spend:3840649, panel_leads:109847, ld_leads:128603, cleaned_leads:104883, triggered:75891, retailed:7621, gen_cpl:35, trig_cpl:51, panel_to_ld_pct:117.1, trig_pct:59.4, cr_pct:10.04, cost_per_retail:516, roas:1.55, revenue:6096800, margin:2112151},
+  {m:"Feb'26", ms_ret:8947, nms_ret:337, spend:4450155, panel_leads:119301, ld_leads:141974, cleaned_leads:121369, triggered:84452, retailed:9284, gen_cpl:37, trig_cpl:53, panel_to_ld_pct:119.0, trig_pct:58.2, cr_pct:10.99, cost_per_retail:512, roas:1.56, revenue:7427200, margin:2497045},
+  {m:"Mar'26", ms_ret:8679, nms_ret:412, spend:5070053, panel_leads:122564, ld_leads:142526, cleaned_leads:117657, triggered:83249, retailed:9091, gen_cpl:41, trig_cpl:61, panel_to_ld_pct:116.3, trig_pct:59.3, cr_pct:10.92, cost_per_retail:619, roas:1.29, revenue:7272800, margin:1481947},
 ];
 
 var ALL_MONTHS = ["Nov'25","Dec'25","Jan'26","Feb'26","Mar'26"];
@@ -4027,57 +4027,85 @@ function t2OnFilterChange() {
   t2ActiveModel = null; t2ActiveMonth = null;
   document.getElementById('t2-month-panel').classList.remove('open');
   document.getElementById('t2-detail-card').style.display = 'none';
-  t2BuildFilterPills(); t2RecomputeKPI(); t2RenderModelTable();
+  t2BuildFilterPills(); t2RecomputeKPI(); t2RenderModelTable(); t2BuildMonthTotalsTable();
 }
 
 function t2BuildMonthTotalsTable() {
   var tbody = document.getElementById('t2-month-tbody');
   if (!tbody) return;
-  META_MONTHS_TOTAL.forEach(function(m) {
-    var ptl = m.panel_leads>0 ? (m.ld_leads/m.panel_leads*100) : 0;
+  tbody.innerHTML = '';
+  // Build month aggregates from MODEL_MONTHS filtered data (respects model+month filters)
+  var monthMap = {};
+  ALL_MONTHS.forEach(function(mo) { monthMap[mo] = {spend:0,panel:0,ld:0,cleaned:0,trig:0,ms_ret:0,nms_ret:0,ret:0,rev:0,margin:0}; });
+  t2GetModels().forEach(function(m) {
+    t2GetMonths(m.model).forEach(function(mo) {
+      var r = monthMap[mo.m];
+      if (!r) return;
+      r.spend   += mo.spend;
+      r.panel   += mo.panel_leads||0;
+      r.ld      += mo.ld_leads||0;
+      r.cleaned += mo.cleaned_leads||0;
+      r.trig    += mo.triggered||0;
+      r.ms_ret  += mo.ms_ret||0;
+      r.nms_ret += mo.nms_ret||0;
+      r.ret     += mo.retailed||0;
+      r.rev     += mo.revenue||0;
+      r.margin  += mo.margin||0;
+    });
+  });
+  // For all-models-all-months, use authoritative totals for cleaned
+  var allSel = t2SelModels.size >= META_MODELS.length && t2SelMonths.size >= ALL_MONTHS.length;
+  var authCleaned = {"Nov'25":112030,"Dec'25":91190,"Jan'26":104883,"Feb'26":121369,"Mar'26":117657};
+  var tot = {spend:0,panel:0,ld:0,cleaned:0,trig:0,ms_ret:0,nms_ret:0,ret:0,rev:0,margin:0};
+  ALL_MONTHS.forEach(function(mo) {
+    var r = monthMap[mo];
+    if (!r || r.spend === 0) return;
+    var cl = allSel ? (authCleaned[mo]||r.cleaned) : r.cleaned;
+    var gen_cpl  = r.panel>0 ? Math.round(r.spend/r.panel) : 0;
+    var trig_cpl = r.trig>0  ? Math.round(r.spend/r.trig)  : 0;
+    var cr       = r.trig>0  ? (r.ret/r.trig*100).toFixed(2)+'%' : '\u2014';
+    var roas     = r.spend>0 ? r.rev/r.spend : 0;
     var tr = document.createElement('tr');
     tr.innerHTML =
-      '<td style="font-weight:500">'+m.m+'</td>'+
-      '<td>\u20b9'+fmtCr(m.spend)+'</td>'+
-      '<td>'+fmt(m.panel_leads)+'</td>'+
-      '<td>\u20b9'+m.gen_cpl+'</td>'+
-      '<td>'+fmt(m.ld_leads)+'</td>'+
-      '<td>'+fmt(m.cleaned_leads||0)+'</td>'+
-      '<td>'+fmt(m.triggered||0)+'</td>'+
-      '<td>\u20b9'+m.trig_cpl+'</td>'+
-      '<td>'+fmt(m.ms_ret||0)+'</td>'+
-      '<td style="color:var(--blue)">+'+(m.nms_ret||0)+'</td>'+
-      '<td style="font-weight:500">'+fmt(m.retailed)+'</td>'+
-      '<td>'+m.cr_pct.toFixed(2)+'%</td>'+
-      '<td>'+roasBadge(m.roas)+'</td>'+
-      '<td>'+marginFmt(m.margin)+'</td>';
+      '<td style="font-weight:500">'+mo+'</td>'+
+      '<td>\u20b9'+fmtCr(r.spend)+'</td>'+
+      '<td>'+fmt(r.panel)+'</td>'+
+      '<td>\u20b9'+gen_cpl+'</td>'+
+      '<td>'+fmt(r.ld)+'</td>'+
+      '<td>'+fmt(cl)+'</td>'+
+      '<td>'+fmt(r.trig)+'</td>'+
+      '<td>\u20b9'+trig_cpl+'</td>'+
+      '<td>'+fmt(r.ms_ret)+'</td>'+
+      '<td style="color:var(--blue)">+'+r.nms_ret+'</td>'+
+      '<td style="font-weight:500">'+fmt(r.ret)+'</td>'+
+      '<td>'+cr+'</td>'+
+      '<td>'+roasBadge(roas)+'</td>'+
+      '<td>'+marginFmt(r.margin)+'</td>';
     tbody.appendChild(tr);
-  });
-  var t = {spend:0,panel:0,ld:0,trig:0,ret:0,rev:0,margin:0};
-  META_MONTHS_TOTAL.forEach(function(m){
-    t.spend+=m.spend; t.panel+=m.panel_leads; t.ld+=m.ld_leads||0;
-    t.trig+=m.triggered||0; t.ret+=m.retailed; t.rev+=m.revenue; t.margin+=m.margin;
+    tot.spend+=r.spend; tot.panel+=r.panel; tot.ld+=r.ld; tot.cleaned+=cl;
+    tot.trig+=r.trig; tot.ms_ret+=r.ms_ret; tot.nms_ret+=r.nms_ret;
+    tot.ret+=r.ret; tot.rev+=r.rev; tot.margin+=r.margin;
   });
   var tTr = document.createElement('tr');
   tTr.className = 'total-row';
-  var tRoas = t.spend>0 ? t.rev/t.spend : 0;
-  var tCL = 0, tMsR = 0, tNmsR = 0;
-  META_MONTHS_TOTAL.forEach(function(m){ tCL += m.cleaned_leads||0; tMsR += m.ms_ret||0; tNmsR += m.nms_ret||0; });
-  var tTCPL = t.trig>0 ? Math.round(t.spend/t.trig) : 0;
+  var tRoas  = tot.spend>0 ? tot.rev/tot.spend : 0;
+  var tCPL   = tot.panel>0 ? Math.round(tot.spend/tot.panel) : 0;
+  var tTCPL  = tot.trig>0  ? Math.round(tot.spend/tot.trig)  : 0;
+  var tCR    = tot.trig>0  ? (tot.ret/tot.trig*100).toFixed(2)+'%' : '\u2014';
   tTr.innerHTML = '<td><strong>Total</strong></td>'+
-    '<td>\u20b9'+fmtCr(t.spend)+'</td>'+
-    '<td>'+fmt(t.panel)+'</td>'+
-    '<td>\u20b9'+(t.panel>0?Math.round(t.spend/t.panel):'\u2014')+'</td>'+
-    '<td>'+fmt(t.ld)+'</td>'+
-    '<td>'+fmt(tCL)+'</td>'+
-    '<td>'+fmt(t.trig)+'</td>'+
+    '<td>\u20b9'+fmtCr(tot.spend)+'</td>'+
+    '<td>'+fmt(tot.panel)+'</td>'+
+    '<td>\u20b9'+tCPL+'</td>'+
+    '<td>'+fmt(tot.ld)+'</td>'+
+    '<td>'+fmt(allSel?547129:tot.cleaned)+'</td>'+
+    '<td>'+fmt(tot.trig)+'</td>'+
     '<td>\u20b9'+tTCPL+'</td>'+
-    '<td>'+fmt(tMsR)+'</td>'+
-    '<td style="color:var(--blue)">+'+tNmsR+'</td>'+
-    '<td style="font-weight:600">'+fmt(t.ret)+'</td>'+
-    '<td>'+(t.trig>0?(t.ret/t.trig*100).toFixed(2)+'%':'\u2014')+'</td>'+
+    '<td>'+fmt(tot.ms_ret)+'</td>'+
+    '<td style="color:var(--blue)">+'+tot.nms_ret+'</td>'+
+    '<td style="font-weight:600">'+fmt(tot.ret)+'</td>'+
+    '<td>'+tCR+'</td>'+
     '<td>'+roasBadge(tRoas)+'</td>'+
-    '<td>'+marginFmt(t.margin)+'</td>';
+    '<td>'+marginFmt(tot.margin)+'</td>';
   tbody.appendChild(tTr);
 }
 
@@ -4154,7 +4182,7 @@ function t3BuildMonthTotalsTable() {
   var t = {spend:0,panel:0,ld:0,trig:0,tvs_ret:0,nms_ret:0,ret:0,rev:0,margin:0};
   GDN_MONTHS_TOTAL.forEach(function(m){
     t.spend+=m.spend; t.panel+=m.panel_leads; t.ld+=m.ld_leads||0;
-    t.trig+=m.triggered||0; t.tvs_ret+=m.tvs_ret||0; t.nms_ret+=m.nms_ret||0;
+    t.trig+=m.tvs_trig||m.triggered||0; t.tvs_ret+=m.tvs_ret||0; t.nms_ret+=m.nms_ret||0;
     t.ret+=m.retailed; t.rev+=m.revenue; t.margin+=m.margin;
   });
   var tTr = document.createElement('tr');
