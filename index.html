@@ -542,7 +542,6 @@
     font-size: 10px;
     padding: 4px 8px !important;
     color: var(--text-3);
-    transition: transform 0.2s;
     text-align: center !important;
     background: var(--bg-2) !important;
   }
@@ -1911,15 +1910,20 @@ function renderT1() {
     var dt2  = isA2 ? tt2  : (tut2>0?tut2:tt2);
     var dd2  = dg2>0?1:1;
     var fp2  = dg2>0?df2/dg2*100:0, cr2=dt2>0?tr3/dt2*100:0;
+    var tot_bd_src = isA2 ? FAIL_CH_MO_BREAKDOWN : UNI_FAIL_CH_MO_BREAKDOWN;
+    var tot_bd_rows = tot_bd_src.filter(function(r){
+      return !t1ActiveChannels.length || t1ActiveChannels.includes(r.ch);
+    });
+    var totBd = getBdCells(tot_bd_rows, dg2, 'ch-intexp-col', 'ch-extexp-col');
     totRow.innerHTML = '<td><strong>All Channels</strong></td>'+
       '<td>'+fmt(dg2)+'</td>'+
       '<td style="color:var(--amber)">'+fmt(di2)+'<br><span style="font-size:10px;color:var(--text-3)">'+(dg2>0?(di2/dg2*100).toFixed(1):0)+'%</span></td>'+
       '<td style="padding:0;border:none;"></td>'+
-      '<td class="ch-intexp-col col-hidden" style="max-width:0;overflow:hidden;padding:0;border:none;"></td>'+'<td class="ch-intexp-col col-hidden" style="max-width:0;overflow:hidden;padding:0;border:none;"></td>'+'<td class="ch-intexp-col col-hidden" style="max-width:0;overflow:hidden;padding:0;border:none;"></td>'+'<td class="ch-intexp-col col-hidden" style="max-width:0;overflow:hidden;padding:0;border:none;"></td>'+'<td class="ch-intexp-col col-hidden" style="max-width:0;overflow:hidden;padding:0;border:none;"></td>'+
+      totBd.int+
       '<td>'+fmt(dt2+dx2)+'</td>'+
       '<td style="color:var(--red)">'+fmt(dx2)+'<br><span style="font-size:10px;color:var(--text-3)">'+(dg2>0?(dx2/dg2*100).toFixed(1):0)+'%</span></td>'+
       '<td style="padding:0;border:none;"></td>'+
-      '<td class="ch-extexp-col col-hidden" style="max-width:0;overflow:hidden;padding:0;border:none;"></td>'+'<td class="ch-extexp-col col-hidden" style="max-width:0;overflow:hidden;padding:0;border:none;"></td>'+'<td class="ch-extexp-col col-hidden" style="max-width:0;overflow:hidden;padding:0;border:none;"></td>'+'<td class="ch-extexp-col col-hidden" style="max-width:0;overflow:hidden;padding:0;border:none;"></td>'+'<td class="ch-extexp-col col-hidden" style="max-width:0;overflow:hidden;padding:0;border:none;"></td>'+
+      totBd.ext+
       '<td style="'+colTrig(dg2>0?dt2/dg2*100:0)+'">'+fmt(dt2)+'<br><span style="font-size:10px;color:var(--text-3)">'+(dg2>0?(dt2/dg2*100).toFixed(1):0)+'%</span></td>'+
       '<td>'+fmt(tr3)+'</td>'+
       '<td>'+cr2.toFixed(2)+'%</td>';
@@ -1936,15 +1940,21 @@ function renderT1() {
       totalCmmRows.forEach(function(r){tg2+=r.gen;tf2+=r.fail;tt2+=r.trig;tr3+=r.ret;});
       var fp2=tg2>0?tf2/tg2*100:0,tp2=tg2>0?tt2/tg2*100:0,cr2=tt2>0?tr3/tt2*100:0;
       var tint2=Math.round(tf2*401704/1362577), text2=tf2-tint2;
+      var tot_bd2_src = FAIL_CH_MO_BREAKDOWN;
+      var tot_bd2_rows = tot_bd2_src.filter(function(r){
+        return (!t1ActiveChannels.length || t1ActiveChannels.includes(r.ch)) &&
+               (!monthFilter || monthFilter.includes(r.month));
+      });
+      var totBd2 = getBdCells(tot_bd2_rows, tg2, 'ch-intexp-col', 'ch-extexp-col');
       totRow.innerHTML = '<td><strong>All Channels</strong></td>'+
         '<td>'+fmt(tg2)+'</td>'+
         '<td style="color:var(--amber)">'+fmt(tint2)+'<br><span style="font-size:10px;color:var(--text-3)">'+(tg2>0?(tint2/tg2*100).toFixed(1):0)+'%</span></td>'+
         '<td style="padding:0;border:none;"></td>'+
-        '<td class="ch-intexp-col col-hidden" style="max-width:0;overflow:hidden;padding:0;border:none;"></td>'+'<td class="ch-intexp-col col-hidden" style="max-width:0;overflow:hidden;padding:0;border:none;"></td>'+'<td class="ch-intexp-col col-hidden" style="max-width:0;overflow:hidden;padding:0;border:none;"></td>'+'<td class="ch-intexp-col col-hidden" style="max-width:0;overflow:hidden;padding:0;border:none;"></td>'+'<td class="ch-intexp-col col-hidden" style="max-width:0;overflow:hidden;padding:0;border:none;"></td>'+
+        totBd2.int+
         '<td>'+fmt(tt2+text2)+'</td>'+
         '<td style="color:var(--red)">'+fmt(text2)+'<br><span style="font-size:10px;color:var(--text-3)">'+(tg2>0?(text2/tg2*100).toFixed(1):0)+'%</span></td>'+
         '<td style="padding:0;border:none;"></td>'+
-        '<td class="ch-extexp-col col-hidden" style="max-width:0;overflow:hidden;padding:0;border:none;"></td>'+'<td class="ch-extexp-col col-hidden" style="max-width:0;overflow:hidden;padding:0;border:none;"></td>'+'<td class="ch-extexp-col col-hidden" style="max-width:0;overflow:hidden;padding:0;border:none;"></td>'+'<td class="ch-extexp-col col-hidden" style="max-width:0;overflow:hidden;padding:0;border:none;"></td>'+'<td class="ch-extexp-col col-hidden" style="max-width:0;overflow:hidden;padding:0;border:none;"></td>'+
+        totBd2.ext+
         '<td style="'+colTrig(tp2)+'">'+fmt(tt2)+'<br><span style="font-size:10px;color:var(--text-3)">'+tp2.toFixed(1)+'%</span></td>'+
         '<td>'+fmt(tr3)+'</td>'+
         '<td>'+cr2.toFixed(2)+'%</td>';
@@ -5914,8 +5924,6 @@ function toggleColExpand(key) {
     't3mo-ret': ['t3mo-retexp-col','#t3mo-th-retexp','var(--teal-light)', 'var(--teal)',  't3mo-retexp-label', 't3mo-retexp-arrow']
   };
   var cfg = classMap[key]; if (!cfg) return;
-  var th = document.querySelector(cfg[1]);
-  if (th) th.style.transform = open ? 'rotate(90deg)' : '';
   var labelEl = cfg[4] ? document.getElementById(cfg[4]) : null;
   var arrowEl = cfg[5] ? document.getElementById(cfg[5]) : null;
   if (labelEl) labelEl.style.display = open ? 'block' : 'none';
