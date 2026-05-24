@@ -1098,8 +1098,8 @@
         <th style="text-align:left">State</th>
         <th>Gen</th>
         <th style="color:var(--amber-dark)">Int Fail</th>
-        <th style="color:var(--red-dark)">Ext Fail</th>
         <th>API Hits</th>
+        <th style="color:var(--red-dark)">Ext Fail</th>
         <th>Triggered</th>
         <th>Retailed</th>
         <th style="background:var(--blue-light);color:var(--blue-dark)">CR%</th>
@@ -2987,13 +2987,28 @@ function getBreakdownRows(useUnique) {
   var intLeg = FAIL_REASON_LEGEND.internal || {};
   var extLeg = FAIL_REASON_LEGEND.external || {};
 
+  var INT_OTHERS_KEYS = ['int__others'];
+  var EXT_OTHERS_KEYS = ['ext__oem_other'];
+
   var intRows = Object.keys(intTotals).map(function(k){
     return { key:k, label: intLeg[k]||k, count: intTotals[k] };
-  }).sort(function(a,b){ return b.count - a.count; });
+  }).sort(function(a,b){
+    var aOther = INT_OTHERS_KEYS.indexOf(a.key) !== -1;
+    var bOther = INT_OTHERS_KEYS.indexOf(b.key) !== -1;
+    if (aOther && !bOther) return 1;
+    if (!aOther && bOther) return -1;
+    return b.count - a.count;
+  });
 
   var extRows = Object.keys(extTotals).map(function(k){
     return { key:k, label: extLeg[k]||k, count: extTotals[k] };
-  }).sort(function(a,b){ return b.count - a.count; });
+  }).sort(function(a,b){
+    var aOther = EXT_OTHERS_KEYS.indexOf(a.key) !== -1;
+    var bOther = EXT_OTHERS_KEYS.indexOf(b.key) !== -1;
+    if (aOther && !bOther) return 1;
+    if (!aOther && bOther) return -1;
+    return b.count - a.count;
+  });
 
   return { intRows: intRows, extRows: extRows };
 }
@@ -5458,10 +5473,33 @@ function renderT5Reasons() {
   if (intThead) intThead.innerHTML='<th style="text-align:left">Reason</th><th>Count</th><th>'+colHdr+'</th>';
   if (extThead) extThead.innerHTML='<th style="text-align:left">Reason</th><th>Count</th><th>'+colHdr+'</th>';
 
-  FAIL_REASONS.forEach(function(r) {
+  var T5_INT_OTHERS = ['Other Internal', 'Rule Other'];
+  var T5_EXT_OTHERS = ['OEM Other'];
+
+  // Split into int/ext and sort others to bottom
+  var intReasons = FAIL_REASONS.filter(function(r){ return r.type==='Internal'; });
+  var extReasons = FAIL_REASONS.filter(function(r){ return r.type==='External'; });
+
+  function t5SortReasons(arr, othersLabels, isAct) {
+    return arr.slice().sort(function(a, b) {
+      var aOther = othersLabels.indexOf(a.reason) !== -1;
+      var bOther = othersLabels.indexOf(b.reason) !== -1;
+      if (aOther && !bOther) return 1;
+      if (!aOther && bOther) return -1;
+      var qa = isAct ? a.count : a.unique_count;
+      var qb = isAct ? b.count : b.unique_count;
+      return qb - qa;
+    });
+  }
+
+  [
+    { arr: t5SortReasons(intReasons, T5_INT_OTHERS, isAct), tbody: intTbody },
+    { arr: t5SortReasons(extReasons, T5_EXT_OTHERS, isAct), tbody: extTbody }
+  ].forEach(function(group) {
+    group.arr.forEach(function(r) {
     var qty = isAct ? r.count : r.unique_count;
     var pct = denom>0 ? (qty/denom*100).toFixed(2)+'%' : '—';
-    var tbody = r.type==='Internal' ? intTbody : extTbody;
+    var tbody = group.tbody;
     var color  = r.type==='Internal' ? 'color:var(--amber)' : 'color:var(--red)';
     var tr = document.createElement('tr');
     tr.innerHTML =
@@ -5473,6 +5511,7 @@ function renderT5Reasons() {
       '<td style="'+color+'">'+fmt(qty)+'</td>'+
       '<td style="'+(parseFloat(pct)>5?'color:var(--red);font-weight:500':parseFloat(pct)>2?'color:var(--amber)':'')+'">'+pct+'</td>';
     tbody.appendChild(tr);
+    });
   });
 
   // bind drill-down buttons on both
@@ -6023,8 +6062,8 @@ function t6Render() {
       '<td style="font-weight:500">' + state + '<span class="toggle-arrow">&#9654;</span></td>' +
       '<td>' + fmt(a.gen) + '</td>' +
       '<td style="color:var(--amber)">' + fmt(a.int_fail) + '<br><span style="font-size:10px;color:var(--text-3)">' + (a.gen>0?(a.int_fail/a.gen*100).toFixed(1):0) + '%</span></td>' +
-      '<td style="color:var(--red)">'   + fmt(a.ext_fail) + '<br><span style="font-size:10px;color:var(--text-3)">' + (a.gen>0?(a.ext_fail/a.gen*100).toFixed(1):0) + '%</span></td>' +
       '<td>' + fmt(a.api_hits) + '</td>' +
+      '<td style="color:var(--red)">'   + fmt(a.ext_fail) + '<br><span style="font-size:10px;color:var(--text-3)">' + (a.gen>0?(a.ext_fail/a.gen*100).toFixed(1):0) + '%</span></td>' +
       '<td>' + fmt(a.triggered) + '<br><span style="font-size:10px;color:var(--text-3)">' + (a.gen>0?(a.triggered/a.gen*100).toFixed(1):0) + '%</span></td>' +
       '<td>' + fmt(a.retailed) + '</td>' +
       '<td style="' + t6CrStyle(a.cr_pct) + '">' + cr + '%</td>';
